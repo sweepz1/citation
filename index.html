@@ -12,13 +12,36 @@
   --bg: #ffffff;
   --surface: #f9f9f9;
   --border: #e5e5e5;
-  --accent: #1a1a1a;
   --green: #16a34a;
   --green-light: #f0fdf4;
   --green-border: #bbf7d0;
   --muted: #888;
   --text: #1a1a1a;
   --font: 'Inter', sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --border: #2a2a2a;
+    --green: #4ade80;
+    --green-light: #0d1f13;
+    --green-border: #1a3a25;
+    --muted: #666;
+    --text: #e8e8e8;
+  }
+
+  input[type="text"], input[type="number"] { background: #1a1a1a; }
+  .search-input { background: #1a1a1a; }
+  .intext-wrap { background: #1a1a1a; }
+  .btn-ghost { background: #1a1a1a; color: #888; }
+  .btn-ghost:hover { color: var(--text); }
+  .btn-primary { background: #e8e8e8; color: #0f0f0f; border-color: #e8e8e8; }
+  .btn-primary:hover { background: #fff; }
+  .copy-all-row { background: #1a1a1a; }
+  .toast { background: #e8e8e8; color: #0f0f0f; }
+  .toast.green { background: #4ade80; color: #0f0f0f; }
 }
 
 body {
@@ -441,7 +464,7 @@ footer span { color: #e53e3e; }
 </div>
 
 <footer>
-  Made in Canada <span>♥</span> 🍁
+  Made in Canada
 </footer>
 
 <div class="toast" id="toast"></div>
