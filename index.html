@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>APA 7 Citation Machine</title>
+  <style>
+    /* ── Page layout ── */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 40px 16px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+      padding: 36px 40px;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    h1 {
+      font-size: 1.7rem;
+      color: #1a2744;
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: #6b7280;
+      margin-bottom: 28px;
+    }
+
+    /* ── Form fields ── */
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 5px;
+      margin-top: 16px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 9px 13px;
+      border: 1.5px solid #d1d5db;
+      border-radius: 7px;
+      font-size: 0.95rem;
+      color: #111827;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+
+    input:focus, select:focus {
+      border-color: #4f7ef8;
+      box-shadow: 0 0 0 3px rgba(79,126,248,0.12);
+    }
+
+    .hint {
+      font-size: 0.78rem;
+      color: #9ca3af;
+      margin-top: 3px;
+    }
+
+    /* ── Generate button ── */
+    button {
+      margin-top: 26px;
+      width: 100%;
+      padding: 11px;
+      background: #4f7ef8;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover { background: #3b63d4; }
+    button:active { background: #2e50b8; }
+
+    /* ── Citation output box ── */
+    #result-section {
+      display: none; /* hidden until a citation is generated */
+      margin-top: 28px;
+      padding: 18px 20px;
+      background: #f8faff;
+      border: 1.5px solid #c7d7fd;
+      border-radius: 8px;
+    }
+
+    #result-section h2 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #4f7ef8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 10px;
+    }
+
+    #citation-output {
+      font-size: 1rem;
+      color: #1a2744;
+      line-height: 1.6;
+      /* APA uses hanging indent — first line flush, rest indented */
+      padding-left: 2em;
+      text-indent: -2em;
+    }
+
+    /* Copy button */
+    #copy-btn {
+      margin-top: 12px;
+      width: auto;
+      padding: 6px 16px;
+      font-size: 0.82rem;
+      background: #e5eafc;
+      color: #3b63d4;
+      border-radius: 6px;
+    }
+    #copy-btn:hover { background: #c7d7fd; }
+
+    .copied-msg {
+      display: inline-block;
+      font-size: 0.78rem;
+      color: #16a34a;
+      margin-left: 10px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .copied-msg.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h1>📚 APA 7 Citation Machine</h1>
+  <p class="subtitle">Fill in the fields below and click <strong>Generate Citation</strong>.</p>
+
+  <!-- ── The Form ── -->
+  <!-- We use JavaScript to submit so the page doesn't reload -->
+  <form id="citation-form">
+
+    <!-- Author(s) -->
+    <label for="authors">Author(s)</label>
+    <input
+      type="text"
+      id="authors"
+      name="authors"
+      placeholder="e.g. Jane Doe, John Smith"
+    />
+    <p class="hint">Separate multiple authors with a comma. You can also type "Last, F." format directly.</p>
+
+    <!-- Year -->
+    <label for="year">Year of Publication</label>
+    <input
+      type="number"
+      id="year"
+      name="year"
+      placeholder="e.g. 2023"
+      min="1000"
+      max="2099"
+    />
+    <p class="hint">Leave blank to use "n.d." (no date).</p>
+
+    <!-- Title -->
+    <label for="title">Title</label>
+    <input
+      type="text"
+      id="title"
+      name="title"
+      placeholder="e.g. The Art of Learning"
+      required
+    />
+    <p class="hint">For articles, this is the article title. For books/websites, the book/page title.</p>
+
+    <!-- Source type dropdown -->
+    <label for="sourceType">Source Type</label>
+    <select id="sourceType" name="sourceType">
+      <option value="book">📖 Book</option>
+      <option value="article">📄 Journal Article</option>
+      <option value="website">🌐 Website</option>
+    </select>
+
+    <!-- Publisher / Journal / URL — label changes dynamically -->
+    <label id="pub-label" for="publisherOrUrl">Publisher</label>
+    <input
+      type="text"
+      id="publisherOrUrl"
+      name="publisherOrUrl"
+      placeholder="e.g. Penguin Books"
+    />
+    <p class="hint" id="pub-hint">Enter the name of the publisher.</p>
+
+    <!-- Submit button -->
+    <button type="submit">Generate Citation</button>
+  </form>
+
+  <!-- ── Citation Output ── -->
+  <div id="result-section">
+    <h2>Your APA 7 Citation</h2>
+    <!-- The server returns HTML (for italics), so we use innerHTML below -->
+    <p id="citation-output"></p>
+
+    <button id="copy-btn" type="button">Copy</button>
+    <span class="copied-msg" id="copied-msg">Copied!</span>
+  </div>
+</div>
+
+<script>
+  // ── Update the publisher label based on source type ──────
+  const sourceTypeSelect = document.getElementById('sourceType');
+  const pubLabel         = document.getElementById('pub-label');
+  const pubInput         = document.getElementById('publisherOrUrl');
+  const pubHint          = document.getElementById('pub-hint');
+
+  // Map each source type to a friendly label, placeholder, and hint
+  const pubInfo = {
+    book:    { label: 'Publisher',    placeholder: 'e.g. Penguin Books',             hint: 'Enter the name of the publisher.' },
+    article: { label: 'Journal Name', placeholder: 'e.g. Journal of Psychology',     hint: 'Enter the name of the journal or magazine.' },
+    website: { label: 'URL',          placeholder: 'e.g. https://www.example.com',   hint: 'Paste the full URL of the webpage.' },
+  };
+
+  function updatePubField() {
+    const info = pubInfo[sourceTypeSelect.value];
+    pubLabel.textContent    = info.label;
+    pubInput.placeholder    = info.placeholder;
+    pubHint.textContent     = info.hint;
+  }
+
+  // Run once on load, then again whenever the dropdown changes
+  updatePubField();
+  sourceTypeSelect.addEventListener('change', updatePubField);
+
+  // ── Handle form submission ───────────────────────────────
+  const form           = document.getElementById('citation-form');
+  const resultSection  = document.getElementById('result-section');
+  const citationOutput = document.getElementById('citation-output');
+
+  form.addEventListener('submit', async (event) => {
+    // Prevent the browser from doing a full page reload
+    event.preventDefault();
+
+    // Gather all form values into a URLSearchParams object
+    // (this is the same format a regular HTML form POST sends)
+    const formData = new URLSearchParams({
+      authors:        document.getElementById('authors').value,
+      year:           document.getElementById('year').value,
+      title:          document.getElementById('title').value,
+      sourceType:     sourceTypeSelect.value,
+      publisherOrUrl: pubInput.value,
+    });
+
+    try {
+      // Send the data to our Node.js server
+      const response = await fetch('/generate', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body:    formData.toString(),
+      });
+
+      // Parse the JSON response: { citation: "..." }
+      const data = await response.json();
+
+      // Display the citation (innerHTML allows the <em> italics tags)
+      citationOutput.innerHTML = data.citation;
+      resultSection.style.display = 'block';
+
+    } catch (err) {
+      // If something went wrong, show an error message
+      citationOutput.textContent = 'Error: Could not reach the server. Is server.js running?';
+      resultSection.style.display = 'block';
+    }
+  });
+
+  // ── Copy button ──────────────────────────────────────────
+  const copyBtn   = document.getElementById('copy-btn');
+  const copiedMsg = document.getElementById('copied-msg');
+
+  copyBtn.addEventListener('click', () => {
+    // citationOutput.innerText gives us plain text (no HTML tags)
+    navigator.clipboard.writeText(citationOutput.innerText).then(() => {
+      copiedMsg.classList.add('show');
+      // Hide the "Copied!" message after 2 seconds
+      setTimeout(() => copiedMsg.classList.remove('show'), 2000);
+    });
+  });
+</script>
+
+</body>
+</html>
