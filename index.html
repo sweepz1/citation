@@ -1,444 +1,801 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>APA 7 Citation Machine</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      padding: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    .container {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-      max-width: 900px;
-      width: 100%;
-      padding: 40px;
-    }
-    
-    h1 {
-      color: #667eea;
-      font-size: 2.5rem;
-      margin-bottom: 10px;
-      text-align: center;
-    }
-    
-    .subtitle {
-      text-align: center;
-      color: #666;
-      margin-bottom: 30px;
-      font-size: 1rem;
-    }
-    
-    .section {
-      margin-bottom: 30px;
-    }
-    
-    .section-title {
-      font-size: 1.2rem;
-      color: #333;
-      margin-bottom: 15px;
-      font-weight: 600;
-    }
-    
-    .input-group {
-      margin-bottom: 15px;
-    }
-    
-    label {
-      display: block;
-      color: #555;
-      margin-bottom: 5px;
-      font-weight: 500;
-      font-size: 0.9rem;
-    }
-    
-    input[type="text"],
-    input[type="url"],
-    select {
-      width: 100%;
-      padding: 12px;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
-      font-size: 1rem;
-      transition: border-color 0.3s;
-    }
-    
-    input:focus,
-    select:focus {
-      outline: none;
-      border-color: #667eea;
-    }
-    
-    .btn {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      padding: 14px 28px;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-      margin-right: 10px;
-    }
-    
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-    }
-    
-    .btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-    }
-    
-    .btn-secondary {
-      background: #f5f5f5;
-      color: #333;
-    }
-    
-    .result-box {
-      background: #f9f9f9;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
-      padding: 20px;
-      margin-top: 20px;
-      display: none;
-    }
-    
-    .result-box.show {
-      display: block;
-    }
-    
-    .result-label {
-      font-weight: 600;
-      color: #667eea;
-      margin-bottom: 10px;
-      font-size: 1.1rem;
-    }
-    
-    .citation-text {
-      background: white;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-      line-height: 1.8;
-      font-size: 0.95rem;
-      border: 1px solid #e0e0e0;
-    }
-    
-    .loading {
-      text-align: center;
-      color: #667eea;
-      font-style: italic;
-      padding: 10px;
-    }
-    
-    .error {
-      background: #fee;
-      border: 2px solid #fcc;
-      color: #c33;
-      padding: 15px;
-      border-radius: 8px;
-      margin-top: 10px;
-    }
-    
-    .info {
-      background: #e3f2fd;
-      border-left: 4px solid #2196f3;
-      padding: 15px;
-      border-radius: 4px;
-      margin-bottom: 20px;
-      font-size: 0.9rem;
-      color: #555;
-    }
-    
-    .button-group {
-      display: flex;
-      gap: 10px;
-      margin-top: 20px;
-    }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CiteFast – APA 7 Citation Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+/* ── Reset & Variables ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0f1117;
+  --surface: #181c27;
+  --surface2: #1e2333;
+  --border: #2a3045;
+  --accent: #4ade80;
+  --accent2: #38bdf8;
+  --text: #e8eaf0;
+  --muted: #6b7a99;
+  --danger: #f87171;
+  --radius: 10px;
+  --font: 'Sora', sans-serif;
+  --mono: 'DM Mono', monospace;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ── */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 32px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.logo {
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--text);
+}
+
+.logo span { color: var(--accent); }
+
+.badge {
+  background: rgba(74,222,128,0.12);
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+  border: 1px solid rgba(74,222,128,0.25);
+  letter-spacing: 0.05em;
+}
+
+/* ── Layout ── */
+.layout {
+  display: flex;
+  flex: 1;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 32px 20px;
+  gap: 28px;
+}
+
+/* ── Left panel ── */
+.left-panel {
+  width: 220px;
+  flex-shrink: 0;
+}
+
+.panel-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  padding-left: 4px;
+}
+
+.source-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.source-list li button {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-family: var(--font);
+  font-size: 0.88rem;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.source-list li button:hover {
+  background: var(--surface2);
+  color: var(--text);
+}
+
+.source-list li button.active {
+  background: rgba(74,222,128,0.1);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.source-list li button .icon { font-size: 1rem; }
+
+/* ── Main panel ── */
+.main-panel { flex: 1; min-width: 0; }
+
+/* ── Search bar ── */
+.search-wrap {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.search-input {
+  flex: 1;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  font-family: var(--font);
+  font-size: 0.95rem;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.search-input::placeholder { color: var(--muted); }
+.search-input:focus { border-color: var(--accent2); }
+
+.btn {
+  padding: 12px 20px;
+  border-radius: var(--radius);
+  border: none;
+  font-family: var(--font);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #0f1117;
+}
+.btn-primary:hover { background: #22c55e; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-ghost {
+  background: var(--surface);
+  color: var(--muted);
+  border: 1.5px solid var(--border);
+}
+.btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+
+/* ── Loader ── */
+.loader {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  margin-bottom: 16px;
+}
+.spinner {
+  width: 16px; height: 16px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent2);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Form card ── */
+.form-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px;
+  margin-bottom: 20px;
+}
+
+.form-card h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group.full { grid-column: 1 / -1; }
+
+label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+input[type="text"], input[type="number"], select, textarea {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 13px;
+  font-family: var(--font);
+  font-size: 0.9rem;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--accent2); }
+input::placeholder, textarea::placeholder { color: var(--muted); }
+select option { background: var(--surface2); }
+
+.auto-filled {
+  border-color: var(--accent) !important;
+  background: rgba(74,222,128,0.05) !important;
+}
+
+/* ── Generate btn row ── */
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+/* ── Citation result ── */
+.result-card {
+  display: none;
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  padding: 24px 28px;
+  margin-bottom: 20px;
+  animation: slideIn 0.25s ease;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.result-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.citation-text {
+  font-size: 0.97rem;
+  line-height: 1.8;
+  color: var(--text);
+  padding-left: 2em;
+  text-indent: -2em;
+  margin-bottom: 16px;
+}
+
+.intext-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  background: var(--surface2);
+  border-radius: 8px;
+}
+.intext-label { font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
+.intext-value { font-family: var(--mono); font-size: 0.9rem; color: var(--accent2); }
+
+.result-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.btn-sm {
+  padding: 7px 14px;
+  font-size: 0.82rem;
+  border-radius: 7px;
+}
+
+.btn-save {
+  background: rgba(56,189,248,0.12);
+  color: var(--accent2);
+  border: 1px solid rgba(56,189,248,0.25);
+}
+.btn-save:hover { background: rgba(56,189,248,0.2); }
+
+.btn-copy {
+  background: var(--surface2);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+.btn-copy:hover { color: var(--text); }
+
+/* ── Saved citations ── */
+.saved-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.saved-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.saved-header h3 { font-size: 0.95rem; font-weight: 600; }
+
+.saved-count {
+  background: var(--surface2);
+  color: var(--muted);
+  font-size: 0.78rem;
+  padding: 2px 9px;
+  border-radius: 20px;
+  font-family: var(--mono);
+}
+
+.saved-empty {
+  padding: 32px 24px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.saved-list { list-style: none; }
+
+.saved-item {
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  animation: slideIn 0.2s ease;
+}
+.saved-item:last-child { border-bottom: none; }
+
+.saved-item-text {
+  flex: 1;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--text);
+  padding-left: 1.5em;
+  text-indent: -1.5em;
+}
+
+.saved-item-del {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 2px 6px;
+  border-radius: 5px;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.saved-item-del:hover { background: rgba(248,113,113,0.15); color: var(--danger); }
+
+.copy-all-row {
+  padding: 12px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ── Toast ── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  transform: translateY(80px);
+  opacity: 0;
+  transition: all 0.25s ease;
+  z-index: 1000;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.green { border-color: var(--accent); color: var(--accent); }
+
+/* ── Responsive ── */
+@media (max-width: 700px) {
+  .left-panel { display: none; }
+  .form-grid { grid-template-columns: 1fr; }
+  header { padding: 14px 18px; }
+  .layout { padding: 20px 14px; }
+}
+</style>
 </head>
 <body>
-  <div class="container">
-    <h1>📚 APA 7 Citation Machine</h1>
-    <p class="subtitle">Generate properly formatted APA 7th edition citations</p>
-    
-    <div class="info">
-      <strong>Quick Start:</strong> Enter a URL and click "Fetch Metadata" to auto-fill citation details, or manually enter information below.
+
+<header>
+  <div class="logo">Cite<span>Fast</span></div>
+  <div class="badge">APA 7</div>
+</header>
+
+<div class="layout">
+
+  <!-- Source type sidebar -->
+  <aside class="left-panel">
+    <div class="panel-label">Source Type</div>
+    <ul class="source-list" id="sourceNav">
+      <li><button class="active" data-type="website"><span class="icon">🌐</span> Website</button></li>
+      <li><button data-type="book"><span class="icon">📖</span> Book</button></li>
+      <li><button data-type="journal"><span class="icon">📄</span> Journal Article</button></li>
+      <li><button data-type="newspaper"><span class="icon">📰</span> Newspaper</button></li>
+      <li><button data-type="youtube"><span class="icon">▶️</span> YouTube Video</button></li>
+    </ul>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main-panel">
+
+    <!-- URL search bar -->
+    <div class="search-wrap">
+      <input class="search-input" id="urlInput" type="text"
+        placeholder="Paste a URL to auto-fill fields (e.g. https://www.nytimes.com/...)"/>
+      <button class="btn btn-primary" id="searchBtn" onclick="fetchMeta()">Auto-Fill</button>
     </div>
-    
-    <!-- URL Fetch Section -->
-    <div class="section">
-      <div class="section-title">Step 1: Fetch Website Data (Optional)</div>
-      <div class="input-group">
-        <label for="url">Website URL</label>
-        <input type="url" id="url" placeholder="https://example.com/article">
-      </div>
-      <button class="btn" onclick="fetchMetadata()">🔍 Fetch Metadata</button>
-      <div id="fetchStatus"></div>
+
+    <div class="loader" id="loader">
+      <div class="spinner"></div>
+      Fetching page info…
     </div>
-    
-    <!-- Citation Form -->
-    <div class="section">
-      <div class="section-title">Step 2: Fill in Citation Details</div>
-      
-      <div class="input-group">
-        <label for="sourceType">Source Type</label>
-        <select id="sourceType">
-          <option value="website">Website</option>
-          <option value="journal">Journal Article</option>
-          <option value="book">Book</option>
-          <option value="newspaper">Newspaper Article</option>
-          <option value="youtube">YouTube Video</option>
-        </select>
+
+    <!-- Citation form -->
+    <div class="form-card">
+      <h2 id="formTitle">🌐 Cite a Website</h2>
+
+      <div class="form-grid" id="formGrid">
+        <!-- Fields injected by JS -->
       </div>
-      
-      <div class="input-group">
-        <label for="authors">Author(s) (separate multiple with "and" or ";")</label>
-        <input type="text" id="authors" placeholder="John Smith and Jane Doe">
-      </div>
-      
-      <div class="input-group">
-        <label for="year">Year</label>
-        <input type="text" id="year" placeholder="2024">
-      </div>
-      
-      <div class="input-group">
-        <label for="month">Month (optional)</label>
-        <input type="text" id="month" placeholder="January">
-      </div>
-      
-      <div class="input-group">
-        <label for="day">Day (optional)</label>
-        <input type="text" id="day" placeholder="15">
-      </div>
-      
-      <div class="input-group">
-        <label for="title">Title</label>
-        <input type="text" id="title" placeholder="Article or book title">
-      </div>
-      
-      <div class="input-group" id="journalGroup">
-        <label for="journal">Journal/Publication Name</label>
-        <input type="text" id="journal" placeholder="Journal of Example Studies">
-      </div>
-      
-      <div class="input-group" id="volumeGroup">
-        <label for="volume">Volume (optional)</label>
-        <input type="text" id="volume" placeholder="12">
-      </div>
-      
-      <div class="input-group" id="issueGroup">
-        <label for="issue">Issue (optional)</label>
-        <input type="text" id="issue" placeholder="3">
-      </div>
-      
-      <div class="input-group" id="pagesGroup">
-        <label for="pages">Pages (optional)</label>
-        <input type="text" id="pages" placeholder="45-67">
-      </div>
-      
-      <div class="input-group" id="publisherGroup" style="display:none;">
-        <label for="publisher">Publisher</label>
-        <input type="text" id="publisher" placeholder="Example Press">
-      </div>
-      
-      <div class="input-group" id="editionGroup" style="display:none;">
-        <label for="edition">Edition (optional)</label>
-        <input type="text" id="edition" placeholder="2nd">
-      </div>
-      
-      <div class="input-group" id="siteNameGroup">
-        <label for="siteName">Website Name</label>
-        <input type="text" id="siteName" placeholder="Example.com">
-      </div>
-      
-      <div class="input-group">
-        <label for="websiteUrl">URL</label>
-        <input type="url" id="websiteUrl" placeholder="https://example.com/article">
-      </div>
-      
-      <div class="input-group" id="doiGroup">
-        <label for="doi">DOI (optional)</label>
-        <input type="text" id="doi" placeholder="10.1000/example.123">
-      </div>
-      
-      <div class="button-group">
-        <button class="btn" onclick="generateCitation()">✨ Generate Citation</button>
-        <button class="btn btn-secondary" onclick="clearForm()">🔄 Clear Form</button>
+
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="generateCitation()">Generate Citation</button>
+        <button class="btn btn-ghost" onclick="clearForm()">Clear</button>
       </div>
     </div>
-    
-    <!-- Results Section -->
-    <div class="result-box" id="results">
-      <div class="result-label">📖 Reference List Citation</div>
-      <div class="citation-text" id="reference"></div>
-      
-      <div class="result-label">📝 In-Text Citation</div>
-      <div class="citation-text" id="intext"></div>
-      
-      <button class="btn" onclick="copyToClipboard('reference')">📋 Copy Reference</button>
-      <button class="btn" onclick="copyToClipboard('intext')">📋 Copy In-Text</button>
+
+    <!-- Result -->
+    <div class="result-card" id="resultCard">
+      <div class="result-label">📋 Reference List Entry</div>
+      <div class="citation-text" id="citationOutput"></div>
+
+      <div class="intext-wrap">
+        <span class="intext-label">In-text:</span>
+        <span class="intext-value" id="inTextOutput"></span>
+      </div>
+
+      <div class="result-actions">
+        <button class="btn btn-sm btn-copy" onclick="copyRef()">Copy Reference</button>
+        <button class="btn btn-sm btn-copy" onclick="copyInText()">Copy In-text</button>
+        <button class="btn btn-sm btn-save" onclick="saveCitation()">+ Save to List</button>
+      </div>
     </div>
-  </div>
-  
-  <script>
-    // Update form fields based on source type
-    document.getElementById('sourceType').addEventListener('change', updateFormFields);
-    
-    function updateFormFields() {
-      const sourceType = document.getElementById('sourceType').value;
-      
-      // Hide all optional groups
-      document.getElementById('journalGroup').style.display = 'none';
-      document.getElementById('volumeGroup').style.display = 'none';
-      document.getElementById('issueGroup').style.display = 'none';
-      document.getElementById('pagesGroup').style.display = 'none';
-      document.getElementById('publisherGroup').style.display = 'none';
-      document.getElementById('editionGroup').style.display = 'none';
-      document.getElementById('siteNameGroup').style.display = 'none';
-      document.getElementById('doiGroup').style.display = 'none';
-      
-      // Show relevant fields
-      if (sourceType === 'journal') {
-        document.getElementById('journalGroup').style.display = 'block';
-        document.getElementById('volumeGroup').style.display = 'block';
-        document.getElementById('issueGroup').style.display = 'block';
-        document.getElementById('pagesGroup').style.display = 'block';
-        document.getElementById('doiGroup').style.display = 'block';
-      } else if (sourceType === 'book') {
-        document.getElementById('publisherGroup').style.display = 'block';
-        document.getElementById('editionGroup').style.display = 'block';
-        document.getElementById('doiGroup').style.display = 'block';
-      } else if (sourceType === 'newspaper') {
-        document.getElementById('journalGroup').style.display = 'block';
-        document.getElementById('journalGroup').querySelector('label').textContent = 'Newspaper Name';
-      } else if (sourceType === 'website') {
-        document.getElementById('siteNameGroup').style.display = 'block';
-      }
+
+    <!-- Saved citations -->
+    <div class="saved-section" id="savedSection">
+      <div class="saved-header">
+        <h3>📚 Saved Citations</h3>
+        <span class="saved-count" id="savedCount">0</span>
+      </div>
+      <div class="saved-empty" id="savedEmpty">No citations saved yet. Generate one and click "Save to List."</div>
+      <ul class="saved-list" id="savedList"></ul>
+      <div class="copy-all-row" id="copyAllRow" style="display:none">
+        <button class="btn btn-sm btn-save" onclick="copyAll()">Copy All Citations</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Source type field definitions ─────────────────────────────
+const SOURCES = {
+  website: {
+    title: '🌐 Cite a Website',
+    fields: [
+      { id:'authors',    label:'Author(s)',         placeholder:'Jane Doe',                   span:'half' },
+      { id:'year',       label:'Year',              placeholder:'2024',                        span:'half', type:'number' },
+      { id:'month',      label:'Month',             placeholder:'March',                       span:'half' },
+      { id:'day',        label:'Day',               placeholder:'15',                          span:'half', type:'number' },
+      { id:'title',      label:'Page Title',        placeholder:'The article title',           span:'full' },
+      { id:'siteName',   label:'Website Name',      placeholder:'The New York Times',          span:'half' },
+      { id:'websiteUrl', label:'URL',               placeholder:'https://www.example.com/...', span:'full' },
+    ]
+  },
+  book: {
+    title: '📖 Cite a Book',
+    fields: [
+      { id:'authors',   label:'Author(s)',     placeholder:'Jane Doe',              span:'half' },
+      { id:'year',      label:'Year',          placeholder:'2024',                  span:'half', type:'number' },
+      { id:'title',     label:'Book Title',    placeholder:'The Great Book',        span:'full' },
+      { id:'edition',   label:'Edition',       placeholder:'2nd',                   span:'half' },
+      { id:'publisher', label:'Publisher',     placeholder:'Penguin Books',         span:'half' },
+      { id:'doi',       label:'DOI (optional)',placeholder:'10.1000/xyz123',        span:'full' },
+    ]
+  },
+  journal: {
+    title: '📄 Cite a Journal Article',
+    fields: [
+      { id:'authors',  label:'Author(s)',       placeholder:'Jane Doe; John Smith', span:'full' },
+      { id:'year',     label:'Year',            placeholder:'2024',                 span:'half', type:'number' },
+      { id:'title',    label:'Article Title',   placeholder:'The article title',    span:'full' },
+      { id:'journal',  label:'Journal Name',    placeholder:'Nature',               span:'half' },
+      { id:'volume',   label:'Volume',          placeholder:'12',                   span:'half', type:'number' },
+      { id:'issue',    label:'Issue',           placeholder:'3',                    span:'half', type:'number' },
+      { id:'pages',    label:'Pages',           placeholder:'45–67',                span:'half' },
+      { id:'doi',      label:'DOI',             placeholder:'10.1000/xyz123',       span:'full' },
+    ]
+  },
+  newspaper: {
+    title: '📰 Cite a Newspaper',
+    fields: [
+      { id:'authors',    label:'Author(s)',       placeholder:'Jane Doe',              span:'half' },
+      { id:'year',       label:'Year',            placeholder:'2024',                  span:'half', type:'number' },
+      { id:'month',      label:'Month',           placeholder:'March',                 span:'half' },
+      { id:'day',        label:'Day',             placeholder:'15',                    span:'half', type:'number' },
+      { id:'title',      label:'Article Title',   placeholder:'The headline',          span:'full' },
+      { id:'journal',    label:'Newspaper Name',  placeholder:'The Washington Post',   span:'half' },
+      { id:'websiteUrl', label:'URL (if online)', placeholder:'https://...',           span:'full' },
+    ]
+  },
+  youtube: {
+    title: '▶️ Cite a YouTube Video',
+    fields: [
+      { id:'authors',    label:'Channel / Author', placeholder:'Kurzgesagt',              span:'half' },
+      { id:'year',       label:'Year',             placeholder:'2024',                    span:'half', type:'number' },
+      { id:'month',      label:'Month',            placeholder:'January',                 span:'half' },
+      { id:'day',        label:'Day',              placeholder:'5',                       span:'half', type:'number' },
+      { id:'title',      label:'Video Title',      placeholder:'How the universe works',  span:'full' },
+      { id:'websiteUrl', label:'YouTube URL',      placeholder:'https://youtu.be/...',    span:'full' },
+    ]
+  },
+};
+
+let currentType = 'website';
+let savedCitations = [];
+
+// ── Render the form fields for the selected source type ───────
+function renderForm(type) {
+  currentType = type;
+  const def = SOURCES[type];
+  document.getElementById('formTitle').textContent = def.title;
+
+  const grid = document.getElementById('formGrid');
+  grid.innerHTML = '';
+
+  def.fields.forEach(f => {
+    const div = document.createElement('div');
+    div.className = 'form-group' + (f.span === 'full' ? ' full' : '');
+
+    const lbl = document.createElement('label');
+    lbl.setAttribute('for', 'field_' + f.id);
+    lbl.textContent = f.label;
+
+    const inp = document.createElement('input');
+    inp.type = f.type || 'text';
+    inp.id = 'field_' + f.id;
+    inp.name = f.id;
+    inp.placeholder = f.placeholder;
+
+    div.appendChild(lbl);
+    div.appendChild(inp);
+    grid.appendChild(div);
+  });
+
+  document.getElementById('resultCard').style.display = 'none';
+}
+
+// ── Source nav clicks ─────────────────────────────────────────
+document.getElementById('sourceNav').addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  document.querySelectorAll('#sourceNav button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderForm(btn.dataset.type);
+});
+
+// ── Get all form values ───────────────────────────────────────
+function getFormData() {
+  const data = { sourceType: currentType };
+  SOURCES[currentType].fields.forEach(f => {
+    const el = document.getElementById('field_' + f.id);
+    if (el) data[f.id] = el.value.trim();
+  });
+  return data;
+}
+
+// ── Auto-fill fields (highlight in green) ────────────────────
+function fillFields(meta) {
+  const map = {
+    title:      meta.title,
+    authors:    meta.author,
+    year:       meta.year,
+    month:      meta.month,
+    day:        meta.day,
+    siteName:   meta.siteName,
+    websiteUrl: meta.url,
+  };
+  Object.entries(map).forEach(([key, val]) => {
+    const el = document.getElementById('field_' + key);
+    if (el && val) {
+      el.value = val;
+      el.classList.add('auto-filled');
+      setTimeout(() => el.classList.remove('auto-filled'), 3000);
     }
-    
-    async function fetchMetadata() {
-      const urlInput = document.getElementById('url').value.trim();
-      const statusDiv = document.getElementById('fetchStatus');
-      
-      if (!urlInput) {
-        statusDiv.innerHTML = '<div class="error">Please enter a URL</div>';
-        return;
-      }
-      
-      statusDiv.innerHTML = '<div class="loading">⏳ Fetching metadata...</div>';
-      
-      try {
-        const response = await fetch('/fetch-meta', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: urlInput })
-        });
-        
-        const data = await response.json();
-        
-        if (data.ok) {
-          // Populate form with metadata
-          if (data.meta.title) document.getElementById('title').value = data.meta.title;
-          if (data.meta.author) document.getElementById('authors').value = data.meta.author;
-          if (data.meta.year) document.getElementById('year').value = data.meta.year;
-          if (data.meta.month) document.getElementById('month').value = data.meta.month;
-          if (data.meta.day) document.getElementById('day').value = data.meta.day;
-          if (data.meta.siteName) document.getElementById('siteName').value = data.meta.siteName;
-          if (data.meta.url) document.getElementById('websiteUrl').value = data.meta.url;
-          
-          statusDiv.innerHTML = '<div style="color: #4caf50; padding: 10px;">✅ Metadata fetched successfully!</div>';
-        } else {
-          statusDiv.innerHTML = `<div class="error">❌ Error: ${data.error}</div>`;
-        }
-      } catch (error) {
-        statusDiv.innerHTML = `<div class="error">❌ Network error: ${error.message}</div>`;
-      }
+  });
+}
+
+// ── Fetch metadata from URL ───────────────────────────────────
+async function fetchMeta() {
+  const rawUrl = document.getElementById('urlInput').value.trim();
+  if (!rawUrl) { toast('Paste a URL first', false); return; }
+
+  const loader = document.getElementById('loader');
+  const btn = document.getElementById('searchBtn');
+  loader.style.display = 'flex';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('/fetch-meta', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: rawUrl }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      fillFields(data.meta);
+      toast('✓ Fields auto-filled!', true);
+    } else {
+      toast('Could not fetch page. Fill manually.', false);
     }
-    
-    async function generateCitation() {
-      const data = {
-        sourceType: document.getElementById('sourceType').value,
-        authors: document.getElementById('authors').value,
-        year: document.getElementById('year').value,
-        month: document.getElementById('month').value,
-        day: document.getElementById('day').value,
-        title: document.getElementById('title').value,
-        journal: document.getElementById('journal').value,
-        volume: document.getElementById('volume').value,
-        issue: document.getElementById('issue').value,
-        pages: document.getElementById('pages').value,
-        publisher: document.getElementById('publisher').value,
-        edition: document.getElementById('edition').value,
-        siteName: document.getElementById('siteName').value,
-        websiteUrl: document.getElementById('websiteUrl').value,
-        doi: document.getElementById('doi').value,
-      };
-      
-      try {
-        const response = await fetch('/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-        
-        const result = await response.json();
-        
-        if (result.ok) {
-          document.getElementById('reference').innerHTML = result.reference;
-          document.getElementById('intext').innerHTML = result.inText;
-          document.getElementById('results').classList.add('show');
-          
-          // Scroll to results
-          document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
-        } else {
-          alert('Error generating citation: ' + result.error);
-        }
-      } catch (error) {
-        alert('Network error: ' + error.message);
-      }
-    }
-    
-    function copyToClipboard(elementId) {
-      const element = document.getElementById(elementId);
-      const text = element.innerText;
-      
-      navigator.clipboard.writeText(text).then(() => {
-        alert('✅ Copied to clipboard!');
-      }).catch(err => {
-        alert('Failed to copy: ' + err);
-      });
-    }
-    
-    function clearForm() {
-      document.querySelectorAll('input').forEach(input => input.value = '');
-      document.getElementById('sourceType').value = 'website';
-      document.getElementById('results').classList.remove('show');
-      document.getElementById('fetchStatus').innerHTML = '';
-      updateFormFields();
-    }
-    
-    // Initialize form on load
-    updateFormFields();
-  </script>
+  } catch {
+    toast('Network error. Fill manually.', false);
+  } finally {
+    loader.style.display = 'none';
+    btn.disabled = false;
+  }
+}
+
+// ── Generate citation ─────────────────────────────────────────
+async function generateCitation() {
+  const data = getFormData();
+  if (!data.title) { toast('Title is required', false); return; }
+
+  try {
+    const res = await fetch('/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+
+    document.getElementById('citationOutput').innerHTML = result.reference;
+    document.getElementById('inTextOutput').textContent = result.inText;
+    const card = document.getElementById('resultCard');
+    card.style.display = 'block';
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } catch {
+    toast('Server error. Is server.js running?', false);
+  }
+}
+
+// ── Save citation ─────────────────────────────────────────────
+function saveCitation() {
+  const text = document.getElementById('citationOutput').innerHTML;
+  if (!text) return;
+  savedCitations.push(text);
+  renderSaved();
+  toast('✓ Saved to list!', true);
+}
+
+function renderSaved() {
+  const list  = document.getElementById('savedList');
+  const empty = document.getElementById('savedEmpty');
+  const count = document.getElementById('savedCount');
+  const copyRow = document.getElementById('copyAllRow');
+
+  count.textContent = savedCitations.length;
+  if (savedCitations.length === 0) {
+    empty.style.display = 'block';
+    list.innerHTML = '';
+    copyRow.style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+  copyRow.style.display = 'flex';
+  list.innerHTML = '';
+
+  savedCitations.forEach((c, i) => {
+    const li = document.createElement('li');
+    li.className = 'saved-item';
+
+    const p = document.createElement('p');
+    p.className = 'saved-item-text';
+    p.innerHTML = c;
+
+    const del = document.createElement('button');
+    del.className = 'saved-item-del';
+    del.textContent = '✕';
+    del.title = 'Remove';
+    del.onclick = () => { savedCitations.splice(i, 1); renderSaved(); };
+
+    li.appendChild(p);
+    li.appendChild(del);
+    list.appendChild(li);
+  });
+}
+
+// ── Copy helpers ──────────────────────────────────────────────
+function copyRef() {
+  const text = document.getElementById('citationOutput').innerText;
+  navigator.clipboard.writeText(text).then(() => toast('✓ Reference copied!', true));
+}
+function copyInText() {
+  const text = document.getElementById('inTextOutput').textContent;
+  navigator.clipboard.writeText(text).then(() => toast('✓ In-text copied!', true));
+}
+function copyAll() {
+  const all = savedCitations.map(c => {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = c;
+    return tmp.innerText;
+  }).join('\n\n');
+  navigator.clipboard.writeText(all).then(() => toast(`✓ ${savedCitations.length} citations copied!`, true));
+}
+
+// ── Clear form ────────────────────────────────────────────────
+function clearForm() {
+  document.querySelectorAll('#formGrid input').forEach(el => el.value = '');
+  document.getElementById('urlInput').value = '';
+  document.getElementById('resultCard').style.display = 'none';
+}
+
+// ── Toast notification ────────────────────────────────────────
+function toast(msg, success = true) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (success ? ' green' : '');
+  setTimeout(() => el.className = 'toast', 2500);
+}
+
+// ── Allow Enter key on URL input ──────────────────────────────
+document.getElementById('urlInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') fetchMeta();
+});
+
+// ── Init ──────────────────────────────────────────────────────
+renderForm('website');
+renderSaved();
+</script>
 </body>
 </html>
