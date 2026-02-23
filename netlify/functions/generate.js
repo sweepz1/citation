@@ -3,8 +3,8 @@ exports.handler = async (event, context) => {
     const body = event.body ? JSON.parse(event.body) : {};
     const input = body.input || "No input provided";
 
-    // Example backend logic (replace with your own)
-    const result = `You sent: ${input}`;
+    // Example citation logic (replace with your actual logic)
+    const result = `Citation generated for: ${input}`;
 
     return {
       statusCode: 200,
