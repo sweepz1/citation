@@ -8,5 +8,9 @@
     { "src": "/api/fetch-meta", "dest": "/api/fetch-meta.js" },
     { "src": "/api/generate", "dest": "/api/generate.js" },
     { "src": "/(.*)", "dest": "/index.html" }
-  ]
+  ],
+  "functions": {
+    "api/fetch-meta.js": { "maxDuration": 10 },
+    "api/generate.js": { "maxDuration": 10 }
+  }
 }
