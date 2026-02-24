@@ -1,39 +1,5 @@
 // api/fetch-meta.js — Vercel serverless function
 
-function fetchHTML(targetUrl, redirectCount = 0) {
-  return new Promise((resolve, reject) => {
-    if (redirectCount > 5) return reject(new Error('Too many redirects'));
-    let parsedUrl;
-    try { parsedUrl = new URL(targetUrl); } catch(e) { return reject(new Error('Invalid URL')); }
-
-    const lib = parsedUrl.protocol === 'https:' ? require('https') : require('http');
-    const req = lib.get({
-      hostname: parsedUrl.hostname,
-      path: parsedUrl.pathname + parsedUrl.search,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': 'text/html,application/xhtml+xml',
-      },
-      timeout: 5000,
-    }, (res) => {
-      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-        const next = res.headers.location.startsWith('http')
-          ? res.headers.location
-          : `${parsedUrl.origin}${res.headers.location}`;
-        fetchHTML(next, redirectCount + 1).then(resolve).catch(reject);
-        return;
-      }
-      let data = '';
-      res.setEncoding('utf8');
-      res.on('data', chunk => { data += chunk; if (data.length > 500000) res.destroy(); });
-      res.on('end', () => resolve(data));
-      res.on('error', reject);
-    });
-    req.on('error', reject);
-    req.on('timeout', () => { req.destroy(); reject(new Error('Timed out')); });
-  });
-}
-
 function extractMeta(html, pageUrl) {
   const decode = s => s
     .replace(/&amp;/g, '&').replace(/&quot;/g, '"')
@@ -52,7 +18,6 @@ function extractMeta(html, pageUrl) {
     /<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']{2,200})["']/i,
     /<meta[^>]+content=["']([^"']{2,200})["'][^>]+property=["']og:title["']/i,
     /<meta[^>]+name=["']twitter:title["'][^>]+content=["']([^"']{2,200})["']/i,
-    /<meta[^>]+content=["']([^"']{2,200})["'][^>]+name=["']twitter:title["']/i,
     /<title[^>]*>([^<]{2,200})<\/title>/i,
   ]);
 
@@ -63,12 +28,10 @@ function extractMeta(html, pageUrl) {
     /"author"\s*:\s*\[.*?"name"\s*:\s*"([^"]{2,100})"/i,
     /"author"\s*:\s*\{\s*(?:"@type"[^}]*)?"name"\s*:\s*"([^"]{2,100})"/i,
     /"author"\s*:\s*"([^"]{2,100})"/i,
-    /[Bb]y\s+([A-Z][a-z\-']+(?:\s+[A-Z]\.?)?\s+[A-Z][a-z\-']+)/,
   ]);
 
   const date = get([
     /<meta[^>]+property=["']article:published_time["'][^>]+content=["']([^"']+)["']/i,
-    /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']article:published_time["']/i,
     /<meta[^>]+name=["']date["'][^>]+content=["']([^"']+)["']/i,
     /<time[^>]+datetime=["']([^"']+)["']/i,
     /"datePublished"\s*:\s*"([^"]+)"/i,
@@ -98,9 +61,36 @@ module.exports = async function handler(req, res) {
   try {
     const { url: targetUrl } = req.body;
     if (!targetUrl) return res.status(400).json({ ok: false, error: 'Missing URL' });
-    const html = await fetchHTML(targetUrl);
+
+    // Use AbortController for a hard 6 second timeout
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 6000);
+
+    let response;
+    try {
+      response = await fetch(targetUrl, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml',
+        },
+        redirect: 'follow',
+      });
+    } catch (e) {
+      clearTimeout(timer);
+      return res.status(504).json({ ok: false, error: 'Page took too long to respond' });
+    }
+
+    clearTimeout(timer);
+
+    if (!response.ok) {
+      return res.status(502).json({ ok: false, error: `Site returned ${response.status}` });
+    }
+
+    const html = await response.text();
     const meta = extractMeta(html, targetUrl);
     return res.json({ ok: true, meta });
+
   } catch (e) {
     return res.status(500).json({ ok: false, error: e.message });
   }
