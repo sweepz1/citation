@@ -1,7 +1,12 @@
 {
-  "rewrites": [
-    { "source": "/api/fetch-meta", "destination": "/api/fetch-meta" },
-    { "source": "/api/generate", "destination": "/api/generate" },
-    { "source": "/(.*)", "destination": "/index.html" }
+  "version": 2,
+  "builds": [
+    { "src": "index.html", "use": "@vercel/static" },
+    { "src": "api/*.js", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/api/fetch-meta", "dest": "/api/fetch-meta.js" },
+    { "src": "/api/generate", "dest": "/api/generate.js" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
