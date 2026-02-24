@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/api/fetch-meta", "destination": "/api/fetch-meta" },
+    { "source": "/api/generate", "destination": "/api/generate" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

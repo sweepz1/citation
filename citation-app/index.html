@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CiteFast – APA 7 Citation Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #ffffff;
+  --surface: #f9f9f9;
+  --border: #e5e5e5;
+  --green: #16a34a;
+  --green-light: #f0fdf4;
+  --green-border: #bbf7d0;
+  --muted: #888;
+  --text: #1a1a1a;
+  --font: 'Inter', sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --border: #2a2a2a;
+    --green: #4ade80;
+    --green-light: #0d1f13;
+    --green-border: #1a3a25;
+    --muted: #666;
+    --text: #e8e8e8;
+  }
+  input[type="text"], input[type="number"] { background: #1a1a1a; }
+  .search-input { background: #1a1a1a; }
+  .intext-wrap { background: #1a1a1a; }
+  .btn-ghost { background: #1a1a1a; color: #888; }
+  .btn-ghost:hover { color: var(--text); }
+  .btn-primary { background: #e8e8e8; color: #0f0f0f; border-color: #e8e8e8; }
+  .btn-primary:hover { background: #fff; }
+  .copy-all-row { background: #1a1a1a; }
+  .toast { background: #e8e8e8; color: #0f0f0f; }
+  .toast.green { background: #4ade80; color: #0f0f0f; }
+  .source-pill { background: #1a2a1a; border-color: #1a3a25; }
+  .source-pill:hover { background: #1a3a25; }
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  padding: 20px 40px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.logo { font-size: 1.1rem; font-weight: 600; letter-spacing: -0.3px; }
+.badge { font-size: 0.7rem; font-weight: 500; color: var(--muted); border: 1px solid var(--border); padding: 3px 8px; border-radius: 20px; letter-spacing: 0.05em; }
+
+.layout { display: flex; flex: 1; max-width: 980px; margin: 0 auto; width: 100%; padding: 40px 24px; gap: 32px; }
+
+.left-panel { width: 180px; flex-shrink: 0; }
+.panel-label { font-size: 0.68rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+.source-list { list-style: none; display: flex; flex-direction: column; }
+.source-list li button { width: 100%; text-align: left; background: none; border: none; padding: 7px 10px; border-radius: 6px; font-family: var(--font); font-size: 0.85rem; color: var(--muted); cursor: pointer; transition: all 0.1s; display: flex; align-items: center; gap: 8px; }
+.source-list li button:hover { background: var(--surface); color: var(--text); }
+.source-list li button.active { background: var(--surface); color: var(--text); font-weight: 600; }
+
+.main-panel { flex: 1; min-width: 0; }
+
+.search-wrap { display: flex; gap: 8px; margin-bottom: 28px; }
+.search-input { flex: 1; border: 1px solid var(--border); border-radius: 7px; padding: 10px 14px; font-family: var(--font); font-size: 0.88rem; color: var(--text); outline: none; background: var(--bg); transition: border-color 0.15s; }
+.search-input::placeholder { color: #d0d0d0; }
+.search-input:focus { border-color: #aaa; }
+
+.btn { padding: 10px 16px; border-radius: 7px; border: 1px solid var(--border); font-family: var(--font); font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.1s; white-space: nowrap; }
+.btn-primary { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+.btn-primary:hover { background: #2d2d2d; }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-ghost { background: #1a1a1a; color: #aaa; border-color: #2a2a2a; }
+.btn-ghost:hover { background: #2d2d2d; color: #fff; }
+
+.loader { display: none; align-items: center; gap: 8px; color: var(--muted); font-size: 0.83rem; margin-bottom: 14px; }
+.spinner { width: 14px; height: 14px; border: 1.5px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.form-card { border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin-bottom: 16px; background: var(--bg); }
+.form-card h2 { font-size: 0.88rem; font-weight: 600; margin-bottom: 20px; color: var(--text); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group.full { grid-column: 1 / -1; }
+label { font-size: 0.75rem; font-weight: 500; color: var(--muted); }
+input[type="text"], input[type="number"] { border: 1px solid var(--border); border-radius: 6px; padding: 9px 11px; font-family: var(--font); font-size: 0.87rem; color: var(--text); outline: none; background: var(--bg); transition: border-color 0.15s; width: 100%; }
+input:focus { border-color: #aaa; }
+input::placeholder { color: #ddd; opacity: 0.6; }
+.auto-filled { border-color: var(--green) !important; background: var(--green-light) !important; }
+.form-actions { display: flex; gap: 8px; margin-top: 18px; }
+
+/* ── Result ── */
+.result-card { display: none; border: 1px solid var(--green-border); border-radius: 10px; padding: 20px 24px; margin-bottom: 16px; background: var(--green-light); animation: fadeUp 0.2s ease; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.result-label { font-size: 0.68rem; font-weight: 600; color: var(--green); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
+.citation-text { font-size: 0.92rem; line-height: 1.75; color: var(--text); padding-left: 2em; text-indent: -2em; margin-bottom: 14px; }
+.intext-wrap { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #fff; border: 1px solid var(--green-border); border-radius: 6px; margin-bottom: 14px; }
+.intext-label { font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+.intext-value { font-size: 0.88rem; color: var(--green); font-weight: 500; }
+.result-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.btn-sm { padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; }
+
+/* ── Source breakdown (TikTok highlight style) ── */
+.source-breakdown {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--green-border);
+}
+.source-breakdown-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 10px;
+}
+.source-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.source-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--green-border);
+  background: var(--green-light);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+.source-pill:hover { background: #dcfce7; border-color: #86efac; }
+.source-pill.active {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+.pill-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Highlight colors for each field */
+.hl-authors   { background: rgba(250, 204, 21,  0.35); border-radius: 2px; padding: 0 2px; }
+.hl-year      { background: rgba(59,  130, 246, 0.25); border-radius: 2px; padding: 0 2px; }
+.hl-title     { background: rgba(168, 85,  247, 0.25); border-radius: 2px; padding: 0 2px; }
+.hl-siteName  { background: rgba(249, 115, 22,  0.25); border-radius: 2px; padding: 0 2px; }
+.hl-url       { background: rgba(20,  184, 166, 0.25); border-radius: 2px; padding: 0 2px; }
+.hl-journal   { background: rgba(236, 72,  153, 0.25); border-radius: 2px; padding: 0 2px; }
+.hl-publisher { background: rgba(107, 114, 128, 0.25); border-radius: 2px; padding: 0 2px; }
+
+.dot-authors   { background: #facc15; }
+.dot-year      { background: #3b82f6; }
+.dot-title     { background: #a855f7; }
+.dot-siteName  { background: #f97316; }
+.dot-url       { background: #14b8a6; }
+.dot-journal   { background: #ec4899; }
+.dot-publisher { background: #6b7280; }
+
+/* Saved */
+.saved-section { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.saved-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--border); }
+.saved-header h3 { font-size: 0.88rem; font-weight: 600; }
+.saved-count { font-size: 0.75rem; color: var(--muted); background: var(--surface); border: 1px solid var(--border); padding: 2px 8px; border-radius: 20px; }
+.saved-empty { padding: 28px 20px; text-align: center; color: #bbb; font-size: 0.85rem; }
+.saved-list { list-style: none; }
+.saved-item { padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 10px; animation: fadeUp 0.2s ease; }
+.saved-item:last-child { border-bottom: none; }
+.saved-item-text { flex: 1; font-size: 0.85rem; line-height: 1.65; color: var(--text); padding-left: 1.5em; text-indent: -1.5em; }
+.saved-item-del { background: none; border: none; color: #ccc; cursor: pointer; font-size: 0.9rem; padding: 2px 5px; border-radius: 4px; transition: all 0.1s; flex-shrink: 0; }
+.saved-item-del:hover { background: #fee2e2; color: #dc2626; }
+.copy-all-row { padding: 10px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; background: var(--surface); }
+
+footer { text-align: center; padding: 28px; color: #ccc; font-size: 0.78rem; letter-spacing: 0.02em; }
+
+.toast { position: fixed; bottom: 20px; right: 20px; background: #1a1a1a; color: #fff; padding: 9px 16px; border-radius: 7px; font-size: 0.83rem; transform: translateY(60px); opacity: 0; transition: all 0.2s ease; z-index: 1000; }
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.green { background: #15803d; }
+
+@media (max-width: 640px) {
+  .left-panel { display: none; }
+  .form-grid { grid-template-columns: 1fr; }
+  header { padding: 16px 20px; }
+  .layout { padding: 24px 16px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Cite<span>Fast</span></div>
+  <div class="badge">APA 7</div>
+</header>
+
+<div class="layout">
+  <aside class="left-panel">
+    <div class="panel-label">Source type</div>
+    <ul class="source-list" id="sourceNav">
+      <li><button class="active" data-type="website">🌐 Website</button></li>
+      <li><button data-type="book">📖 Book</button></li>
+      <li><button data-type="journal">📄 Journal</button></li>
+      <li><button data-type="newspaper">📰 Newspaper</button></li>
+      <li><button data-type="youtube">▶️ YouTube</button></li>
+    </ul>
+  </aside>
+
+  <main class="main-panel">
+    <div class="search-wrap">
+      <input class="search-input" id="urlInput" type="text" placeholder="Paste a URL to auto-fill fields…"/>
+      <button class="btn btn-primary" id="searchBtn" onclick="fetchMeta()">Auto-Fill</button>
+    </div>
+
+    <div class="loader" id="loader">
+      <div class="spinner"></div>
+      Fetching page info…
+    </div>
+
+    <div class="form-card">
+      <h2 id="formTitle">Website</h2>
+      <div class="form-grid" id="formGrid"></div>
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="generateCitation()">Generate Citation</button>
+        <button class="btn btn-ghost" onclick="clearForm()">Clear</button>
+      </div>
+    </div>
+
+    <div class="result-card" id="resultCard">
+      <div class="result-label">Reference</div>
+      <div class="citation-text" id="citationOutput"></div>
+      <div class="intext-wrap">
+        <span class="intext-label">In-text:</span>
+        <span class="intext-value" id="inTextOutput"></span>
+      </div>
+      <div class="result-actions">
+        <button class="btn btn-sm btn-ghost" onclick="copyRef()">Copy reference</button>
+        <button class="btn btn-sm btn-ghost" onclick="copyInText()">Copy in-text</button>
+        <button class="btn btn-sm btn-primary" onclick="saveCitation()">+ Save</button>
+      </div>
+
+      <!-- TikTok-style source breakdown -->
+      <div class="source-breakdown" id="sourceBreakdown" style="display:none">
+        <div class="source-breakdown-label">Where each part came from — tap to highlight</div>
+        <div class="source-pills" id="sourcePills"></div>
+      </div>
+    </div>
+
+    <div class="saved-section" id="savedSection">
+      <div class="saved-header">
+        <h3>Saved citations</h3>
+        <span class="saved-count" id="savedCount">0</span>
+      </div>
+      <div class="saved-empty" id="savedEmpty">No citations saved yet.</div>
+      <ul class="saved-list" id="savedList"></ul>
+      <div class="copy-all-row" id="copyAllRow" style="display:none">
+        <button class="btn btn-sm btn-ghost" onclick="copyAll()">Copy all</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<footer>Made in Canada</footer>
+<div class="toast" id="toast"></div>
+
+<script>
+const SOURCES = {
+  website: {
+    title: 'Website',
+    fields: [
+      { id:'authors',    label:'Author(s)',    placeholder:'Jane Doe',                    span:'half' },
+      { id:'year',       label:'Year',         placeholder:'2024',                        span:'half', type:'number' },
+      { id:'month',      label:'Month',        placeholder:'March',                       span:'half' },
+      { id:'day',        label:'Day',          placeholder:'15',                          span:'half', type:'number' },
+      { id:'title',      label:'Page title',   placeholder:'The article title',           span:'full' },
+      { id:'siteName',   label:'Website name', placeholder:'The New York Times',          span:'half' },
+      { id:'websiteUrl', label:'URL',          placeholder:'https://www.example.com/...', span:'full' },
+    ]
+  },
+  book: {
+    title: 'Book',
+    fields: [
+      { id:'authors',   label:'Author(s)',      placeholder:'Jane Doe',          span:'half' },
+      { id:'year',      label:'Year',           placeholder:'2024',              span:'half', type:'number' },
+      { id:'title',     label:'Book title',     placeholder:'The Great Book',    span:'full' },
+      { id:'edition',   label:'Edition',        placeholder:'2nd',               span:'half' },
+      { id:'publisher', label:'Publisher',      placeholder:'Penguin Books',     span:'half' },
+      { id:'doi',       label:'DOI (optional)', placeholder:'10.1000/xyz123',    span:'full' },
+    ]
+  },
+  journal: {
+    title: 'Journal Article',
+    fields: [
+      { id:'authors', label:'Author(s)',      placeholder:'Jane Doe; John Smith', span:'full' },
+      { id:'year',    label:'Year',           placeholder:'2024',                 span:'half', type:'number' },
+      { id:'title',   label:'Article title',  placeholder:'The article title',    span:'full' },
+      { id:'journal', label:'Journal name',   placeholder:'Nature',               span:'half' },
+      { id:'volume',  label:'Volume',         placeholder:'12',                   span:'half', type:'number' },
+      { id:'issue',   label:'Issue',          placeholder:'3',                    span:'half', type:'number' },
+      { id:'pages',   label:'Pages',          placeholder:'45–67',                span:'half' },
+      { id:'doi',     label:'DOI',            placeholder:'10.1000/xyz123',       span:'full' },
+    ]
+  },
+  newspaper: {
+    title: 'Newspaper',
+    fields: [
+      { id:'authors',    label:'Author(s)',       placeholder:'Jane Doe',             span:'half' },
+      { id:'year',       label:'Year',            placeholder:'2024',                 span:'half', type:'number' },
+      { id:'month',      label:'Month',           placeholder:'March',                span:'half' },
+      { id:'day',        label:'Day',             placeholder:'15',                   span:'half', type:'number' },
+      { id:'title',      label:'Article title',   placeholder:'The headline',         span:'full' },
+      { id:'journal',    label:'Newspaper name',  placeholder:'The Washington Post',  span:'half' },
+      { id:'websiteUrl', label:'URL (if online)', placeholder:'https://…',            span:'full' },
+    ]
+  },
+  youtube: {
+    title: 'YouTube Video',
+    fields: [
+      { id:'authors',    label:'Channel / Author', placeholder:'Kurzgesagt',             span:'half' },
+      { id:'year',       label:'Year',             placeholder:'2024',                   span:'half', type:'number' },
+      { id:'month',      label:'Month',            placeholder:'January',                span:'half' },
+      { id:'day',        label:'Day',              placeholder:'5',                      span:'half', type:'number' },
+      { id:'title',      label:'Video title',      placeholder:'How the universe works', span:'full' },
+      { id:'websiteUrl', label:'YouTube URL',      placeholder:'https://youtu.be/…',     span:'full' },
+    ]
+  },
+};
+
+// Field metadata for the highlight feature
+const FIELD_META = {
+  authors:    { label: 'Authors',   dotClass: 'dot-authors',   hlClass: 'hl-authors'   },
+  year:       { label: 'Year',      dotClass: 'dot-year',      hlClass: 'hl-year'      },
+  month:      { label: 'Date',      dotClass: 'dot-year',      hlClass: 'hl-year'      },
+  day:        { label: 'Date',      dotClass: 'dot-year',      hlClass: 'hl-year'      },
+  title:      { label: 'Title',     dotClass: 'dot-title',     hlClass: 'hl-title'     },
+  siteName:   { label: 'Site',      dotClass: 'dot-siteName',  hlClass: 'hl-siteName'  },
+  websiteUrl: { label: 'URL',       dotClass: 'dot-url',       hlClass: 'hl-url'       },
+  journal:    { label: 'Journal',   dotClass: 'dot-journal',   hlClass: 'hl-journal'   },
+  publisher:  { label: 'Publisher', dotClass: 'dot-publisher', hlClass: 'hl-publisher' },
+  doi:        { label: 'DOI',       dotClass: 'dot-url',       hlClass: 'hl-url'       },
+};
+
+let currentType = 'website';
+let savedCitations = JSON.parse(localStorage.getItem('citefast_citations') || '[]');
+let lastFormData = {};
+let rawCitationHTML = '';
+let activeHighlight = null;
+
+function renderForm(type) {
+  currentType = type;
+  const def = SOURCES[type];
+  document.getElementById('formTitle').textContent = def.title;
+  const grid = document.getElementById('formGrid');
+  grid.innerHTML = '';
+  def.fields.forEach(f => {
+    const div = document.createElement('div');
+    div.className = 'form-group' + (f.span === 'full' ? ' full' : '');
+    const lbl = document.createElement('label');
+    lbl.setAttribute('for', 'field_' + f.id);
+    lbl.textContent = f.label;
+    const inp = document.createElement('input');
+    inp.type = f.type || 'text';
+    inp.id = 'field_' + f.id;
+    inp.name = f.id;
+    inp.placeholder = f.placeholder;
+    div.appendChild(lbl);
+    div.appendChild(inp);
+    grid.appendChild(div);
+  });
+  document.getElementById('resultCard').style.display = 'none';
+}
+
+document.getElementById('sourceNav').addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  document.querySelectorAll('#sourceNav button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderForm(btn.dataset.type);
+});
+
+function getFormData() {
+  const data = { sourceType: currentType };
+  SOURCES[currentType].fields.forEach(f => {
+    const el = document.getElementById('field_' + f.id);
+    if (el) data[f.id] = el.value.trim();
+  });
+  return data;
+}
+
+function fillFields(meta) {
+  const map = {
+    title: meta.title, authors: meta.author, year: meta.year,
+    month: meta.month, day: meta.day, siteName: meta.siteName, websiteUrl: meta.url,
+  };
+  Object.entries(map).forEach(([key, val]) => {
+    const el = document.getElementById('field_' + key);
+    if (el && val) {
+      el.value = val;
+      el.classList.add('auto-filled');
+      setTimeout(() => el.classList.remove('auto-filled'), 2500);
+    }
+  });
+}
+
+async function fetchMeta() {
+  const rawUrl = document.getElementById('urlInput').value.trim();
+  if (!rawUrl) { toast('Paste a URL first', false); return; }
+  const loader = document.getElementById('loader');
+  const btn = document.getElementById('searchBtn');
+  loader.style.display = 'flex';
+  btn.disabled = true;
+  try {
+    const res  = await fetch('/api/fetch-meta', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ url: rawUrl }) });
+    const data = await res.json();
+    if (data.ok) { fillFields(data.meta); toast('Fields auto-filled', true); }
+    else toast('Could not fetch page — fill manually', false);
+  } catch { toast('Could not reach server', false); }
+  finally { loader.style.display = 'none'; btn.disabled = false; }
+}
+
+// ── Build highlighted version of citation ────────────────────
+function buildHighlightedCitation(rawHTML, formData, activeField) {
+  if (!activeField) return rawHTML;
+
+  const meta = FIELD_META[activeField];
+  if (!meta) return rawHTML;
+
+  // Get the value(s) to highlight from the form
+  let valuesToHighlight = [];
+
+  if (activeField === 'month' || activeField === 'day' || activeField === 'year') {
+    // Highlight the whole date portion
+    const y = formData.year || '';
+    const m = formData.month || '';
+    const d = formData.day || '';
+    if (y && m && d) valuesToHighlight.push(`${y}, ${m} ${d}`);
+    else if (y && m) valuesToHighlight.push(`${y}, ${m}`);
+    else if (y) valuesToHighlight.push(y);
+    if (!y) valuesToHighlight.push('n.d.');
+  } else if (activeField === 'websiteUrl' || activeField === 'doi') {
+    const v = formData[activeField];
+    if (v) valuesToHighlight.push(v);
+  } else if (activeField === 'authors') {
+    // Match the formatted authors — just highlight everything before the first period
+    // We'll do a simpler approach: highlight the raw value if it appears
+    const v = formData.authors;
+    if (v) {
+      // Try to find last name
+      const parts = v.split(/\s+/);
+      const lastName = parts[parts.length - 1];
+      if (lastName.length > 2) valuesToHighlight.push(lastName);
+    }
+  } else {
+    const v = formData[activeField];
+    if (v) valuesToHighlight.push(v);
+  }
+
+  if (!valuesToHighlight.length) return rawHTML;
+
+  // Wrap plain text nodes only (avoid breaking HTML tags)
+  // Strip existing highlights first
+  let html = rawHTML.replace(/<mark[^>]*>(.*?)<\/mark>/gi, '$1');
+
+  valuesToHighlight.forEach(val => {
+    if (!val || val.length < 2) return;
+    // Escape special regex chars
+    const escaped = val.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    try {
+      const re = new RegExp(`(${escaped})(?![^<]*>)`, 'gi');
+      html = html.replace(re, `<mark class="${meta.hlClass}">$1</mark>`);
+    } catch(e) {}
+  });
+
+  return html;
+}
+
+// ── Render source pills ───────────────────────────────────────
+function renderSourcePills(formData) {
+  const pills = document.getElementById('sourcePills');
+  const breakdown = document.getElementById('sourceBreakdown');
+  pills.innerHTML = '';
+
+  const fields = SOURCES[currentType].fields;
+  const seen = new Set();
+  const shownPills = [];
+
+  fields.forEach(f => {
+    const val = formData[f.id];
+    if (!val) return;
+    const meta = FIELD_META[f.id];
+    if (!meta) return;
+    // Dedupe by label (month/day/year all show as "Date")
+    if (seen.has(meta.label)) return;
+    seen.add(meta.label);
+    shownPills.push({ fieldId: f.id, meta, val });
+  });
+
+  if (!shownPills.length) { breakdown.style.display = 'none'; return; }
+
+  breakdown.style.display = 'block';
+
+  shownPills.forEach(({ fieldId, meta, val }) => {
+    const pill = document.createElement('button');
+    pill.className = 'source-pill';
+    pill.innerHTML = `<span class="pill-dot ${meta.dotClass}"></span>${meta.label}: <strong>${val.length > 30 ? val.slice(0, 30) + '…' : val}</strong>`;
+    pill.addEventListener('click', () => {
+      if (activeHighlight === fieldId) {
+        // Toggle off
+        activeHighlight = null;
+        document.querySelectorAll('.source-pill').forEach(p => p.classList.remove('active'));
+        document.getElementById('citationOutput').innerHTML = rawCitationHTML;
+      } else {
+        activeHighlight = fieldId;
+        document.querySelectorAll('.source-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        document.getElementById('citationOutput').innerHTML = buildHighlightedCitation(rawCitationHTML, formData, fieldId);
+      }
+    });
+    pills.appendChild(pill);
+  });
+}
+
+async function generateCitation() {
+  const data = getFormData();
+  if (!data.title) { toast('Title is required', false); return; }
+  try {
+    const res    = await fetch('/api/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
+    const result = await res.json();
+
+    rawCitationHTML = result.reference;
+    activeHighlight = null;
+    lastFormData = data;
+
+    document.getElementById('citationOutput').innerHTML = result.reference;
+    document.getElementById('inTextOutput').innerHTML   = result.inText;
+
+    const card = document.getElementById('resultCard');
+    card.style.display = 'block';
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    renderSourcePills(data);
+  } catch { toast('Server error', false); }
+}
+
+function saveCitation() {
+  const text = document.getElementById('citationOutput').innerHTML;
+  if (!text) return;
+  // Save plain version (no highlights)
+  savedCitations.push(rawCitationHTML || text);
+  localStorage.setItem('citefast_citations', JSON.stringify(savedCitations));
+  renderSaved();
+  toast('Saved', true);
+}
+
+function renderSaved() {
+  const list = document.getElementById('savedList');
+  const empty = document.getElementById('savedEmpty');
+  const count = document.getElementById('savedCount');
+  const copyRow = document.getElementById('copyAllRow');
+  count.textContent = savedCitations.length;
+  if (!savedCitations.length) { empty.style.display='block'; list.innerHTML=''; copyRow.style.display='none'; return; }
+  empty.style.display = 'none';
+  copyRow.style.display = 'flex';
+  list.innerHTML = '';
+  savedCitations.forEach((c, i) => {
+    const li  = document.createElement('li');
+    li.className = 'saved-item';
+    const p   = document.createElement('p');
+    p.className = 'saved-item-text';
+    p.innerHTML = c;
+    const del = document.createElement('button');
+    del.className = 'saved-item-del';
+    del.textContent = '✕';
+    del.onclick = () => {
+      savedCitations.splice(i, 1);
+      localStorage.setItem('citefast_citations', JSON.stringify(savedCitations));
+      renderSaved();
+    };
+    li.appendChild(p); li.appendChild(del); list.appendChild(li);
+  });
+}
+
+function copyRef()    { navigator.clipboard.writeText(document.getElementById('citationOutput').innerText).then(() => toast('Copied', true)); }
+function copyInText() { navigator.clipboard.writeText(document.getElementById('inTextOutput').innerText).then(() => toast('Copied', true)); }
+function copyAll() {
+  const all = savedCitations.map(c => { const t = document.createElement('div'); t.innerHTML = c; return t.innerText; }).join('\n\n');
+  navigator.clipboard.writeText(all).then(() => toast(`${savedCitations.length} citations copied`, true));
+}
+function clearForm() {
+  document.querySelectorAll('#formGrid input').forEach(el => el.value = '');
+  document.getElementById('urlInput').value = '';
+  document.getElementById('resultCard').style.display = 'none';
+  document.getElementById('sourceBreakdown').style.display = 'none';
+  activeHighlight = null;
+  rawCitationHTML = '';
+}
+
+function toast(msg, success = true) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (success ? ' green' : '');
+  setTimeout(() => el.className = 'toast', 2200);
+}
+
+document.getElementById('urlInput').addEventListener('keydown', e => { if (e.key === 'Enter') fetchMeta(); });
+
+renderForm('website');
+renderSaved();
+</script>
+</body>
+</html>
