@@ -2,7 +2,6 @@
 const cheerio = require('cheerio');
 
 module.exports = async (req, res) => {
-  // Hard kill after 7s regardless of what fetch is doing
   const killTimer = setTimeout(() => {
     if (!res.headersSent) {
       res.json({ ok: false, error: 'Could not fetch page — fill in fields manually' });
@@ -41,7 +40,6 @@ module.exports = async (req, res) => {
 
     const html = await response.text();
     clearTimeout(killTimer);
-
     const meta = extractMeta(html, targetUrl);
     return res.json({ ok: true, meta });
 
@@ -52,6 +50,19 @@ module.exports = async (req, res) => {
     }
   }
 };
+
+function isUrl(str) {
+  try { new URL(str); return true; } catch { return false; }
+}
+
+function isValidName(str) {
+  if (!str || str.trim().length < 2) return false;
+  if (isUrl(str)) return false;
+  // Filter out things that look like organization tags, emails, or garbage
+  if (str.includes('@') && str.includes('.')) return false;
+  if (str.length > 100) return false;
+  return true;
+}
 
 function extractMeta(html, pageUrl) {
   const $ = cheerio.load(html);
@@ -71,11 +82,23 @@ function extractMeta(html, pageUrl) {
     'meta[name="title"]',
   ]) || $('title').text().trim() || '';
 
-  const author = getMeta([
-    'meta[name="author"]',
-    'meta[property="article:author"]',
-    'meta[name="twitter:creator"]',
-  ]) || $('[rel="author"]').first().text().trim() || '';
+  // Try multiple author sources, skip any that are URLs
+  let author = '';
+  const authorCandidates = [
+    getMeta(['meta[name="author"]']),
+    getMeta(['meta[name="twitter:creator"]']),
+    getMeta(['meta[property="article:author"]']),
+    $('[rel="author"]').first().text().trim(),
+    $('[class*="author"]').first().text().trim(),
+    $('[itemprop="author"]').first().text().trim(),
+  ];
+
+  for (const candidate of authorCandidates) {
+    if (isValidName(candidate)) {
+      author = candidate;
+      break;
+    }
+  }
 
   const date = getMeta([
     'meta[property="article:published_time"]',
