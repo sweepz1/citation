@@ -51,6 +51,8 @@ module.exports = async (req, res) => {
   }
 };
 
+// ── Helpers ─────────────────────────────────────────────────────────────────
+
 function isUrl(str) {
   try { new URL(str); return true; } catch { return false; }
 }
@@ -59,90 +61,126 @@ function isValidName(str) {
   if (!str || str.trim().length < 2) return false;
   if (isUrl(str)) return false;
   if (str.includes('@') && str.includes('.')) return false;
-  if (str.length > 100) return false;
-  // Reject bare property names or JSON fragments
-  if (/^"?name"?$/.test(str.trim())) return false;
-  if (str.includes('{') || str.includes('"')) return false;
+  if (str.length > 150) return false;
+  if (/^"?name"?$/i.test(str.trim())) return false;
+  if (str.includes('{') || str.includes('}')) return false;
+  if (/^\d+$/.test(str.trim())) return false;
   return true;
 }
 
-function extractAuthorFromJsonLd(html) {
-  // Find JSON-LD script blocks and parse author from them properly
-  const matches = html.match(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) || [];
-  for (const block of matches) {
-    try {
-      const json = block.replace(/<\/?script[^>]*>/gi, '');
-      const data = JSON.parse(json);
-      const objs = Array.isArray(data) ? data : [data];
-      for (const obj of objs) {
-        const author = obj.author;
-        if (!author) continue;
-        const authorObj = Array.isArray(author) ? author[0] : author;
-        if (typeof authorObj === 'string' && isValidName(authorObj)) return authorObj;
-        if (authorObj && typeof authorObj.name === 'string' && isValidName(authorObj.name)) return authorObj.name;
-      }
-    } catch(e) {}
-  }
-  return '';
+function parseDate(raw) {
+  if (!raw) return null;
+  const d = new Date(raw);
+  if (!isNaN(d.getTime())) return d;
+  return null;
 }
+
+// ── JSON-LD extraction ───────────────────────────────────────────────────────
+
+function parseJsonLd(html) {
+  const result = { author: '', date: '' };
+  const blocks = html.match(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) || [];
+
+  for (const block of blocks) {
+    try {
+      const raw = block.replace(/<\/?script[^>]*>/gi, '').trim();
+      const data = JSON.parse(raw);
+      const objs = Array.isArray(data) ? data : [data];
+
+      for (const obj of objs) {
+        // Author
+        if (!result.author && obj.author) {
+          const a = Array.isArray(obj.author) ? obj.author[0] : obj.author;
+          if (typeof a === 'string' && isValidName(a)) result.author = a;
+          else if (a && typeof a.name === 'string' && isValidName(a.name)) result.author = a.name;
+        }
+
+        // Date
+        if (!result.date) {
+          const d = obj.datePublished || obj.dateCreated || obj.uploadDate || obj.dateModified;
+          if (d && typeof d === 'string') result.date = d;
+        }
+
+        if (result.author && result.date) break;
+      }
+    } catch (e) {}
+
+    if (result.author && result.date) break;
+  }
+
+  return result;
+}
+
+// ── Main extraction ──────────────────────────────────────────────────────────
 
 function extractMeta(html, pageUrl) {
   const $ = cheerio.load(html);
 
-  const getMeta = (selectors) => {
+  const getMeta = (...selectors) => {
     for (const sel of selectors) {
-      const el = $(sel);
-      const val = el.attr('content') || el.text();
-      if (val && val.trim().length > 1) return val.trim();
+      const val = ($(sel).attr('content') || $(sel).text() || '').trim();
+      if (val.length > 1) return val;
     }
     return '';
   };
 
-  const title = getMeta([
-    'meta[property="og:title"]',
-    'meta[name="twitter:title"]',
-    'meta[name="title"]',
-  ]) || $('title').text().trim() || '';
+  // ── Title ──
+  const title =
+    getMeta('meta[property="og:title"]', 'meta[name="twitter:title"]', 'meta[name="title"]') ||
+    $('title').text().trim() ||
+    $('h1').first().text().trim() ||
+    '';
 
-  // Try multiple author sources, skip any that are URLs
+  // ── Site name ──
+  const siteName =
+    getMeta('meta[property="og:site_name"]') ||
+    new URL(pageUrl).hostname.replace(/^www\./, '');
+
+  // ── JSON-LD (most reliable source) ──
+  const jsonLd = parseJsonLd(html);
+
+  // ── Author ──
   let author = '';
-  const authorCandidates = [
-    getMeta(['meta[name="author"]']),
-    getMeta(['meta[name="twitter:creator"]']),
-    getMeta(['meta[property="article:author"]']),
-    extractAuthorFromJsonLd(html),
+  const authorSources = [
+    getMeta('meta[name="author"]'),
+    getMeta('meta[property="article:author"]'),
+    getMeta('meta[name="twitter:creator"]'),
+    jsonLd.author,
     $('[rel="author"]').first().text().trim(),
     $('[itemprop="author"] [itemprop="name"]').first().text().trim(),
     $('[itemprop="author"]').first().text().trim(),
+    $('[class*="author__name"]').first().text().trim(),
+    $('[class*="byline"]').first().text().trim().replace(/^by\s+/i, ''),
+    $('[class*="author-name"]').first().text().trim(),
   ];
 
-  for (const candidate of authorCandidates) {
-    if (isValidName(candidate)) {
-      author = candidate;
-      break;
-    }
+  for (const src of authorSources) {
+    if (isValidName(src)) { author = src; break; }
   }
 
-  const date = getMeta([
-    'meta[property="article:published_time"]',
-    'meta[name="date"]',
-    'meta[name="pubdate"]',
-    'meta[itemprop="datePublished"]',
-  ]) || $('time[datetime]').attr('datetime') || '';
-
-  const siteName = getMeta(['meta[property="og:site_name"]']) ||
-    new URL(pageUrl).hostname.replace(/^www\./, '');
+  // ── Date ──
+  let rawDate =
+    getMeta('meta[property="article:published_time"]') ||
+    getMeta('meta[name="date"]') ||
+    getMeta('meta[name="pubdate"]') ||
+    getMeta('meta[name="publish-date"]') ||
+    getMeta('meta[name="publication_date"]') ||
+    getMeta('meta[itemprop="datePublished"]') ||
+    jsonLd.date ||
+    $('time[datetime]').attr('datetime') ||
+    $('[itemprop="datePublished"]').attr('content') ||
+    $('[itemprop="datePublished"]').text().trim() ||
+    '';
 
   let year = '', month = '', day = '';
-  if (date) {
-    const d = new Date(date);
-    if (!isNaN(d.getTime())) {
-      year = d.getFullYear().toString();
-      month = d.toLocaleString('en-US', { month: 'long' });
-      day = d.getDate().toString();
-    }
+  const parsed = parseDate(rawDate);
+  if (parsed) {
+    year = parsed.getFullYear().toString();
+    month = parsed.toLocaleString('en-US', { month: 'long' });
+    day = parsed.getDate().toString();
   }
 
+  // ── Clean up ──
   const clean = s => (s || '')
     .replace(/&amp;/g, '&').replace(/&quot;/g, '"')
     .replace(/&#039;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim();
@@ -150,7 +188,9 @@ function extractMeta(html, pageUrl) {
   return {
     title: clean(title),
     author: clean(author),
-    year, month, day,
+    year,
+    month,
+    day,
     siteName: clean(siteName),
     url: pageUrl,
   };
