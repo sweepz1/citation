@@ -18,7 +18,6 @@
   .btn-ghost { color:#888; } .btn-ghost:hover { color:var(--text); }
   .btn-primary { background:#e8e8e8; color:#0f0f0f; border-color:#e8e8e8; } .btn-primary:hover { background:#fff; }
   .toast { background:#e8e8e8; color:#0f0f0f; } .toast.green { background:#4ade80; color:#0f0f0f; }
-  .source-pill { background:#1a2a1a; border-color:#1a3a25; } .source-pill:hover { background:#1a3a25; }
 }
 body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; display:flex; flex-direction:column; }
 header { padding:20px 40px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
@@ -60,21 +59,6 @@ input:focus { border-color:#aaa; } input::placeholder { color:#ddd; opacity:0.6;
 .intext-value { font-size:0.88rem; color:var(--green); font-weight:500; }
 .result-actions { display:flex; gap:6px; flex-wrap:wrap; }
 .btn-sm { padding:6px 12px; font-size:0.8rem; border-radius:6px; }
-.source-breakdown { margin-top:16px; padding-top:16px; border-top:1px solid var(--green-border); }
-.source-breakdown-label { font-size:0.68rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:10px; }
-.source-pills { display:flex; flex-wrap:wrap; gap:6px; }
-.source-pill { display:inline-flex; align-items:center; gap:6px; padding:5px 10px; border-radius:20px; border:1px solid var(--green-border); background:var(--green-light); font-size:0.78rem; cursor:pointer; transition:all 0.15s; user-select:none; }
-.source-pill:hover { background:#dcfce7; border-color:#86efac; }
-.source-pill.active { background:var(--green); border-color:var(--green); color:#fff; }
-.pill-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
-.hl-authors   { background:rgba(250,204,21,0.35);  border-radius:2px; padding:0 2px; }
-.hl-year      { background:rgba(59,130,246,0.25);  border-radius:2px; padding:0 2px; }
-.hl-title     { background:rgba(168,85,247,0.25);  border-radius:2px; padding:0 2px; }
-.hl-siteName  { background:rgba(249,115,22,0.25);  border-radius:2px; padding:0 2px; }
-.hl-url       { background:rgba(20,184,166,0.25);  border-radius:2px; padding:0 2px; }
-.hl-journal   { background:rgba(236,72,153,0.25);  border-radius:2px; padding:0 2px; }
-.dot-authors  { background:#facc15; } .dot-year { background:#3b82f6; } .dot-title { background:#a855f7; }
-.dot-siteName { background:#f97316; } .dot-url  { background:#14b8a6; } .dot-journal { background:#ec4899; }
 .saved-section { border:1px solid var(--border); border-radius:10px; overflow:hidden; }
 .saved-header { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; border-bottom:1px solid var(--border); }
 .saved-header h3 { font-size:0.88rem; font-weight:600; }
@@ -135,10 +119,6 @@ footer { text-align:center; padding:28px; color:#ccc; font-size:0.78rem; }
         <button class="btn btn-sm btn-ghost" onclick="copyInText()">Copy in-text</button>
         <button class="btn btn-sm btn-primary" onclick="saveCitation()">+ Save</button>
       </div>
-      <div class="source-breakdown" id="sourceBreakdown" style="display:none">
-        <div class="source-breakdown-label">Tap a pill to highlight where each part came from</div>
-        <div class="source-pills" id="sourcePills"></div>
-      </div>
     </div>
     <div class="saved-section">
       <div class="saved-header">
@@ -164,24 +144,9 @@ const SOURCES = {
   youtube:   { title:'YouTube Video',  fields:[{id:'authors',label:'Channel / Author',placeholder:'Kurzgesagt',span:'half'},{id:'year',label:'Year',placeholder:'2024',span:'half',type:'number'},{id:'month',label:'Month',placeholder:'January',span:'half'},{id:'day',label:'Day',placeholder:'5',span:'half',type:'number'},{id:'title',label:'Video title',placeholder:'How the universe works',span:'full'},{id:'websiteUrl',label:'YouTube URL',placeholder:'https://youtu.be/…',span:'full'}] },
 };
 
-const FIELD_META = {
-  authors:    {label:'Authors',   dotClass:'dot-authors',  hlClass:'hl-authors'},
-  year:       {label:'Year',      dotClass:'dot-year',     hlClass:'hl-year'},
-  month:      {label:'Date',      dotClass:'dot-year',     hlClass:'hl-year'},
-  day:        {label:'Date',      dotClass:'dot-year',     hlClass:'hl-year'},
-  title:      {label:'Title',     dotClass:'dot-title',    hlClass:'hl-title'},
-  siteName:   {label:'Site',      dotClass:'dot-siteName', hlClass:'hl-siteName'},
-  websiteUrl: {label:'URL',       dotClass:'dot-url',      hlClass:'hl-url'},
-  journal:    {label:'Journal',   dotClass:'dot-journal',  hlClass:'hl-journal'},
-  publisher:  {label:'Publisher', dotClass:'dot-url',      hlClass:'hl-url'},
-  doi:        {label:'DOI',       dotClass:'dot-url',      hlClass:'hl-url'},
-};
 
 let currentType = 'website';
 let savedCitations = JSON.parse(localStorage.getItem('citefast_citations') || '[]');
-let lastFormData = {};
-let rawCitationHTML = '';
-let activeHighlight = null;
 
 function renderForm(type) {
   currentType = type;
@@ -244,89 +209,24 @@ async function fetchMeta() {
   finally { loader.style.display = 'none'; btn.disabled = false; }
 }
 
-function renderSourcePills(formData) {
-  const pills = document.getElementById('sourcePills');
-  const breakdown = document.getElementById('sourceBreakdown');
-  pills.innerHTML = '';
-  const fields = SOURCES[currentType].fields;
-  const seen = new Set();
-  const shown = [];
-  fields.forEach(f => {
-    const val = formData[f.id];
-    if (!val) return;
-    const meta = FIELD_META[f.id];
-    if (!meta || seen.has(meta.label)) return;
-    seen.add(meta.label);
-    shown.push({ fieldId:f.id, meta, val });
-  });
-  if (!shown.length) { breakdown.style.display='none'; return; }
-  breakdown.style.display = 'block';
-  shown.forEach(({ fieldId, meta, val }) => {
-    const pill = document.createElement('button');
-    pill.className = 'source-pill';
-    pill.innerHTML = `<span class="pill-dot ${meta.dotClass}"></span>${meta.label}: <strong>${val.length > 30 ? val.slice(0,30)+'…' : val}</strong>`;
-    pill.addEventListener('click', () => {
-      if (activeHighlight === fieldId) {
-        activeHighlight = null;
-        document.querySelectorAll('.source-pill').forEach(p => p.classList.remove('active'));
-        document.getElementById('citationOutput').innerHTML = rawCitationHTML;
-      } else {
-        activeHighlight = fieldId;
-        document.querySelectorAll('.source-pill').forEach(p => p.classList.remove('active'));
-        pill.classList.add('active');
-        document.getElementById('citationOutput').innerHTML = highlight(rawCitationHTML, formData, fieldId);
-      }
-    });
-    pills.appendChild(pill);
-  });
-}
-
-function highlight(html, formData, fieldId) {
-  const meta = FIELD_META[fieldId];
-  if (!meta) return html;
-  let vals = [];
-  if (['month','day','year'].includes(fieldId)) {
-    const { year:y, month:m, day:d } = formData;
-    if (y && m && d) vals.push(`${y}, ${m} ${d}`);
-    else if (y && m) vals.push(`${y}, ${m}`);
-    else if (y) vals.push(y);
-    if (!y) vals.push('n.d.');
-  } else {
-    const v = formData[fieldId];
-    if (v) vals.push(v);
-  }
-  let result = html;
-  vals.forEach(val => {
-    if (!val || val.length < 2) return;
-    const escaped = val.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    try {
-      result = result.replace(new RegExp(`(${escaped})(?![^<]*>)`, 'gi'), `<mark class="${meta.hlClass}">$1</mark>`);
-    } catch(e) {}
-  });
-  return result;
-}
-
 async function generateCitation() {
   const data = getFormData();
   if (!data.title) { toast('Title is required', false); return; }
   try {
     const res = await fetch('/api/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
     const result = await res.json();
-    rawCitationHTML = result.reference;
-    activeHighlight = null;
-    lastFormData = data;
     document.getElementById('citationOutput').innerHTML = result.reference;
     document.getElementById('inTextOutput').innerHTML = result.inText;
     const card = document.getElementById('resultCard');
     card.style.display = 'block';
     card.scrollIntoView({ behavior:'smooth', block:'nearest' });
-    renderSourcePills(data);
   } catch { toast('Server error', false); }
 }
 
 function saveCitation() {
-  if (!rawCitationHTML) return;
-  savedCitations.push(rawCitationHTML);
+  const refText = document.getElementById('citationOutput').innerHTML;
+  if (!refText) return;
+  savedCitations.push(refText);
   localStorage.setItem('citefast_citations', JSON.stringify(savedCitations));
   renderSaved(); toast('Saved', true);
 }
@@ -358,8 +258,6 @@ function clearForm() {
   document.querySelectorAll('#formGrid input').forEach(el => el.value='');
   document.getElementById('urlInput').value='';
   document.getElementById('resultCard').style.display='none';
-  document.getElementById('sourceBreakdown').style.display='none';
-  activeHighlight=null; rawCitationHTML='';
 }
 function toast(msg, success=true) {
   const el=document.getElementById('toast');
