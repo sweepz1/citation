@@ -163,7 +163,16 @@ function renderForm(type) {
     const inp = document.createElement('input');
     inp.type = f.type || 'text';
     inp.id = 'field_' + f.id;
-    inp.placeholder = f.placeholder;
+    // Use current date values for date fields
+    if (f.id === 'year') {
+      inp.placeholder = new Date().getFullYear().toString();
+    } else if (f.id === 'month') {
+      inp.placeholder = new Date().toLocaleString('en-US', { month: 'long' });
+    } else if (f.id === 'day') {
+      inp.placeholder = new Date().getDate().toString();
+    } else {
+      inp.placeholder = f.placeholder;
+    }
     div.appendChild(lbl); div.appendChild(inp); grid.appendChild(div);
   });
   document.getElementById('resultCard').style.display = 'none';
