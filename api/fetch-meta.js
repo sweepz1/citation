@@ -58,10 +58,32 @@ function isUrl(str) {
 function isValidName(str) {
   if (!str || str.trim().length < 2) return false;
   if (isUrl(str)) return false;
-  // Filter out things that look like organization tags, emails, or garbage
   if (str.includes('@') && str.includes('.')) return false;
   if (str.length > 100) return false;
+  // Reject bare property names or JSON fragments
+  if (/^"?name"?$/.test(str.trim())) return false;
+  if (str.includes('{') || str.includes('"')) return false;
   return true;
+}
+
+function extractAuthorFromJsonLd(html) {
+  // Find JSON-LD script blocks and parse author from them properly
+  const matches = html.match(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) || [];
+  for (const block of matches) {
+    try {
+      const json = block.replace(/<\/?script[^>]*>/gi, '');
+      const data = JSON.parse(json);
+      const objs = Array.isArray(data) ? data : [data];
+      for (const obj of objs) {
+        const author = obj.author;
+        if (!author) continue;
+        const authorObj = Array.isArray(author) ? author[0] : author;
+        if (typeof authorObj === 'string' && isValidName(authorObj)) return authorObj;
+        if (authorObj && typeof authorObj.name === 'string' && isValidName(authorObj.name)) return authorObj.name;
+      }
+    } catch(e) {}
+  }
+  return '';
 }
 
 function extractMeta(html, pageUrl) {
@@ -88,8 +110,9 @@ function extractMeta(html, pageUrl) {
     getMeta(['meta[name="author"]']),
     getMeta(['meta[name="twitter:creator"]']),
     getMeta(['meta[property="article:author"]']),
+    extractAuthorFromJsonLd(html),
     $('[rel="author"]').first().text().trim(),
-    $('[class*="author"]').first().text().trim(),
+    $('[itemprop="author"] [itemprop="name"]').first().text().trim(),
     $('[itemprop="author"]').first().text().trim(),
   ];
 
