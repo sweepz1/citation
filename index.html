@@ -1,157 +1,1107 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>CiteFast – APA 7 Citation Generator</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
 :root {
-  --bg: #ffffff; --surface: #f9f9f9; --border: #e5e5e5;
-  --green: #16a34a; --green-light: #f0fdf4; --green-border: #bbf7d0;
-  --muted: #888; --text: #1a1a1a; --font: 'Inter', sans-serif;
+  --bg: #fafaf8;
+  --surface: #ffffff;
+  --surface2: #f4f3ef;
+  --border: #e8e6df;
+  --border-strong: #ccc9be;
+  --accent: #2d6a4f;
+  --accent-light: #eef7f2;
+  --accent-border: #b7dfc9;
+  --accent-hover: #245c43;
+  --red: #c0392b;
+  --red-light: #fdf2f2;
+  --muted: #8a8678;
+  --text: #1a1916;
+  --text-light: #5a5850;
+  --shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.1);
+  --radius: 10px;
+  --font-body: 'DM Sans', sans-serif;
+  --font-display: 'Lora', serif;
+  --transition: 0.18s ease;
 }
-@media (prefers-color-scheme: dark) {
-  :root { --bg:#0f0f0f; --surface:#1a1a1a; --border:#2a2a2a; --green:#4ade80; --green-light:#0d1f13; --green-border:#1a3a25; --muted:#666; --text:#e8e8e8; }
-  input[type="text"],input[type="number"],.search-input,.intext-wrap,.btn-ghost,.copy-all-row { background:#1a1a1a; }
-  .btn-ghost { color:#888; } .btn-ghost:hover { color:var(--text); }
-  .btn-primary { background:#e8e8e8; color:#0f0f0f; border-color:#e8e8e8; } .btn-primary:hover { background:#fff; }
-  .toast { background:#e8e8e8; color:#0f0f0f; } .toast.green { background:#4ade80; color:#0f0f0f; }
+
+[data-theme="dark"] {
+  --bg: #111110;
+  --surface: #1c1c1a;
+  --surface2: #242422;
+  --border: #2e2d2a;
+  --border-strong: #3d3c38;
+  --accent: #4ade80;
+  --accent-light: #0d1f15;
+  --accent-border: #1a3d27;
+  --accent-hover: #6ee79a;
+  --red: #f87171;
+  --red-light: #1f1212;
+  --muted: #6b6a64;
+  --text: #eeede8;
+  --text-light: #9a9890;
+  --shadow: 0 1px 4px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.4);
 }
-body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; display:flex; flex-direction:column; }
-header { padding:20px 40px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
-.logo { font-size:1.1rem; font-weight:600; letter-spacing:-0.3px; }
-.badge { font-size:0.7rem; font-weight:500; color:var(--muted); border:1px solid var(--border); padding:3px 8px; border-radius:20px; letter-spacing:0.05em; }
-.layout { display:flex; flex:1; max-width:980px; margin:0 auto; width:100%; padding:40px 24px; gap:32px; }
-.left-panel { width:180px; flex-shrink:0; }
-.panel-label { font-size:0.68rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:8px; }
-.source-list { list-style:none; display:flex; flex-direction:column; }
-.source-list li button { width:100%; text-align:left; background:none; border:none; padding:7px 10px; border-radius:6px; font-family:var(--font); font-size:0.85rem; color:var(--muted); cursor:pointer; transition:all 0.1s; display:flex; align-items:center; gap:8px; }
-.source-list li button:hover { background:var(--surface); color:var(--text); }
-.source-list li button.active { background:var(--surface); color:var(--text); font-weight:600; }
-.main-panel { flex:1; min-width:0; }
-.search-wrap { display:flex; gap:8px; margin-bottom:28px; }
-.search-input { flex:1; border:1px solid var(--border); border-radius:7px; padding:10px 14px; font-family:var(--font); font-size:0.88rem; color:var(--text); outline:none; background:var(--bg); transition:border-color 0.15s; }
-.search-input::placeholder { color:#d0d0d0; } .search-input:focus { border-color:#aaa; }
-.btn { padding:10px 16px; border-radius:7px; border:1px solid var(--border); font-family:var(--font); font-size:0.85rem; font-weight:500; cursor:pointer; transition:all 0.1s; white-space:nowrap; }
-.btn-primary { background:#1a1a1a; color:#fff; border-color:#1a1a1a; } .btn-primary:hover { background:#2d2d2d; } .btn-primary:disabled { opacity:0.4; cursor:not-allowed; }
-.btn-ghost { background:#1a1a1a; color:#aaa; border-color:#2a2a2a; } .btn-ghost:hover { background:#2d2d2d; color:#fff; }
-.loader { display:none; align-items:center; gap:8px; color:var(--muted); font-size:0.83rem; margin-bottom:14px; }
-.spinner { width:14px; height:14px; border:1.5px solid var(--border); border-top-color:var(--green); border-radius:50%; animation:spin 0.7s linear infinite; }
-@keyframes spin { to { transform:rotate(360deg); } }
-.form-card { border:1px solid var(--border); border-radius:10px; padding:24px; margin-bottom:16px; background:var(--bg); }
-.form-card h2 { font-size:0.88rem; font-weight:600; margin-bottom:20px; color:var(--text); }
-.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-.form-group { display:flex; flex-direction:column; gap:5px; }
-.form-group.full { grid-column:1/-1; }
-label { font-size:0.75rem; font-weight:500; color:var(--muted); }
-input[type="text"],input[type="number"] { border:1px solid var(--border); border-radius:6px; padding:9px 11px; font-family:var(--font); font-size:0.87rem; color:var(--text); outline:none; background:var(--bg); transition:border-color 0.15s; width:100%; }
-input:focus { border-color:#aaa; } input::placeholder { color:#ddd; opacity:0.6; }
-.auto-filled { border-color:var(--green)!important; background:var(--green-light)!important; }
-.form-actions { display:flex; gap:8px; margin-top:18px; }
-.result-card { display:none; border:1px solid var(--green-border); border-radius:10px; padding:20px 24px; margin-bottom:16px; background:var(--green-light); animation:fadeUp 0.2s ease; }
-@keyframes fadeUp { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
-.result-label { font-size:0.68rem; font-weight:600; color:var(--green); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:10px; }
-.citation-text { font-size:0.92rem; line-height:1.75; color:var(--text); padding-left:2em; text-indent:-2em; margin-bottom:14px; }
-.intext-wrap { display:flex; align-items:center; gap:10px; padding:8px 12px; background:#fff; border:1px solid var(--green-border); border-radius:6px; margin-bottom:14px; }
-.intext-label { font-size:0.75rem; color:var(--muted); white-space:nowrap; }
-.intext-value { font-size:0.88rem; color:var(--green); font-weight:500; }
-.result-actions { display:flex; gap:6px; flex-wrap:wrap; }
-.btn-sm { padding:6px 12px; font-size:0.8rem; border-radius:6px; }
-.saved-section { border:1px solid var(--border); border-radius:10px; overflow:hidden; }
-.saved-header { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; border-bottom:1px solid var(--border); }
-.saved-header h3 { font-size:0.88rem; font-weight:600; }
-.saved-count { font-size:0.75rem; color:var(--muted); background:var(--surface); border:1px solid var(--border); padding:2px 8px; border-radius:20px; }
-.saved-empty { padding:28px 20px; text-align:center; color:#bbb; font-size:0.85rem; }
-.saved-list { list-style:none; }
-.saved-item { padding:12px 20px; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; gap:10px; animation:fadeUp 0.2s ease; }
-.saved-item:last-child { border-bottom:none; }
-.saved-item-text { flex:1; font-size:0.85rem; line-height:1.65; color:var(--text); padding-left:1.5em; text-indent:-1.5em; }
-.saved-item-del { background:none; border:none; color:#ccc; cursor:pointer; font-size:0.9rem; padding:2px 5px; border-radius:4px; transition:all 0.1s; flex-shrink:0; }
-.saved-item-del:hover { background:#fee2e2; color:#dc2626; }
-.copy-all-row { padding:10px 20px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; background:var(--surface); }
-footer { text-align:center; padding:28px; color:#ccc; font-size:0.78rem; }
-.toast { position:fixed; bottom:20px; right:20px; background:#1a1a1a; color:#fff; padding:9px 16px; border-radius:7px; font-size:0.83rem; transform:translateY(60px); opacity:0; transition:all 0.2s ease; z-index:1000; }
-.toast.show { transform:translateY(0); opacity:1; } .toast.green { background:#15803d; }
-@media (max-width:640px) { .left-panel{display:none} .form-grid{grid-template-columns:1fr} header{padding:16px 20px} .layout{padding:24px 16px} }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  transition: background var(--transition), color var(--transition);
+}
+
+/* ── HEADER ── */
+header {
+  padding: 0 40px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow);
+}
+
+.logo {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.3px;
+}
+.logo span { color: var(--accent); }
+
+.header-right { display: flex; align-items: center; gap: 10px; }
+
+.badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--accent);
+  border: 1.5px solid var(--accent-border);
+  background: var(--accent-light);
+  padding: 3px 9px;
+  border-radius: 20px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.icon-btn {
+  width: 34px; height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+  transition: all var(--transition);
+}
+.icon-btn:hover { color: var(--text); border-color: var(--border-strong); background: var(--surface); }
+
+/* ── TABS (Citation Machine style) ── */
+.source-tabs {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 40px;
+  display: flex;
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.source-tabs::-webkit-scrollbar { display: none; }
+
+.source-tab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 14px 18px;
+  font-family: var(--font-body);
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: var(--muted);
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all var(--transition);
+  white-space: nowrap;
+  margin-bottom: -1px;
+}
+.source-tab:hover { color: var(--text); }
+.source-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+.source-tab .tab-icon { font-size: 1rem; }
+
+/* ── LAYOUT ── */
+.layout {
+  flex: 1;
+  max-width: 860px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 36px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── SEARCH BAR ── */
+.search-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  box-shadow: var(--shadow);
+}
+.search-card-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+}
+.search-wrap { display: flex; gap: 8px; }
+.search-input {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  color: var(--text);
+  background: var(--surface2);
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+.search-input::placeholder { color: var(--muted); opacity: 0.6; }
+.search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+
+/* ── BUTTONS ── */
+.btn {
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn-ghost {
+  background: var(--surface2);
+  color: var(--text-light);
+  border-color: var(--border);
+}
+.btn-ghost:hover { color: var(--text); border-color: var(--border-strong); background: var(--surface); }
+
+.btn-danger {
+  background: var(--red-light);
+  color: var(--red);
+  border-color: transparent;
+}
+.btn-danger:hover { opacity: 0.85; }
+
+.btn-sm { padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; }
+
+/* ── FORM CARD ── */
+.form-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.form-card-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface2);
+}
+.form-card-header h2 {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.form-card-body { padding: 24px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group.full { grid-column: 1 / -1; }
+label { font-size: 0.75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+input[type="text"], input[type="number"] {
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 9px 12px;
+  font-family: var(--font-body);
+  font-size: 0.87rem;
+  color: var(--text);
+  background: var(--surface2);
+  outline: none;
+  width: 100%;
+  transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+}
+input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); background: var(--surface); }
+input::placeholder { color: var(--muted); opacity: 0.5; }
+
+.auto-filled { border-color: var(--accent) !important; background: var(--accent-light) !important; }
+
+.authors-hint {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  background: var(--surface2);
+}
+
+/* ── LOADER ── */
+.loader {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  padding: 10px 0 0;
+}
+.spinner {
+  width: 14px; height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── RESULT CARD ── */
+.result-card {
+  display: none;
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--accent-light);
+  box-shadow: var(--shadow);
+  animation: fadeUp 0.2s ease;
+}
+@keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+.result-card-header {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--accent-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.result-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.result-card-body { padding: 20px 24px; }
+.citation-text {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  line-height: 1.85;
+  color: var(--text);
+  padding-left: 2em;
+  text-indent: -2em;
+  margin-bottom: 16px;
+}
+
+.intext-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--accent-border);
+  border-radius: 6px;
+  padding: 7px 14px;
+  margin-bottom: 16px;
+}
+.intext-label { font-size: 0.73rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+.intext-value { font-size: 0.88rem; color: var(--accent); font-weight: 600; }
+
+.result-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* ── FORMAT SWITCHER ── */
+.format-switcher {
+  display: flex;
+  gap: 4px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px;
+}
+.format-btn {
+  padding: 5px 12px;
+  border-radius: 5px;
+  border: none;
+  background: none;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.format-btn.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* ── SAVED SECTION ── */
+.saved-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.saved-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface2);
+}
+.saved-header-left { display: flex; align-items: center; gap: 10px; }
+.saved-header h3 {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.saved-count {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-light);
+  border: 1px solid var(--accent-border);
+  padding: 2px 9px;
+  border-radius: 20px;
+}
+.saved-empty {
+  padding: 36px 24px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.saved-empty-icon { font-size: 2rem; margin-bottom: 8px; opacity: 0.4; }
+
+.saved-list { list-style: none; }
+.saved-item {
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  animation: fadeUp 0.2s ease;
+  transition: background var(--transition);
+}
+.saved-item:last-child { border-bottom: none; }
+.saved-item:hover { background: var(--surface2); }
+
+.saved-item-num {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+  min-width: 20px;
+  margin-top: 3px;
+}
+.saved-item-text {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  line-height: 1.7;
+  color: var(--text);
+  padding-left: 1.5em;
+  text-indent: -1.5em;
+}
+.saved-item-actions { display: flex; gap: 4px; flex-shrink: 0; }
+.saved-item-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 4px 6px;
+  border-radius: 5px;
+  transition: all var(--transition);
+}
+.saved-item-btn:hover { background: var(--surface); color: var(--text); }
+.saved-item-del:hover { background: var(--red-light) !important; color: var(--red) !important; }
+
+.copy-all-row {
+  padding: 12px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--surface2);
+}
+
+/* ── SETTINGS PANEL ── */
+.settings-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 200;
+  display: none;
+  align-items: flex-start;
+  justify-content: flex-end;
+  backdrop-filter: blur(2px);
+}
+.settings-overlay.open { display: flex; }
+
+.settings-panel {
+  width: 320px;
+  height: 100vh;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.22s ease;
+}
+@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+.settings-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.settings-header h2 {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+.settings-body { padding: 24px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 28px; }
+
+.setting-group h4 {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 12px;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.setting-row:last-child { border-bottom: none; }
+.setting-info { flex: 1; }
+.setting-name { font-size: 0.88rem; font-weight: 500; color: var(--text); }
+.setting-desc { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+/* Toggle switch */
+.toggle {
+  position: relative;
+  width: 40px; height: 22px;
+  flex-shrink: 0;
+}
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-track {
+  position: absolute; inset: 0;
+  background: var(--border-strong);
+  border-radius: 22px;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+.toggle-track::after {
+  content: '';
+  position: absolute;
+  left: 3px; top: 3px;
+  width: 16px; height: 16px;
+  background: white;
+  border-radius: 50%;
+  transition: transform var(--transition);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.toggle input:checked + .toggle-track { background: var(--accent); }
+.toggle input:checked + .toggle-track::after { transform: translateX(18px); }
+
+/* Theme options */
+.theme-options { display: flex; gap: 8px; }
+.theme-option {
+  flex: 1;
+  padding: 10px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface2);
+  cursor: pointer;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  transition: all var(--transition);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.theme-option:hover { border-color: var(--border-strong); color: var(--text); }
+.theme-option.active { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+.theme-icon { font-size: 1.3rem; }
+
+/* Font size slider */
+.font-slider { width: 100%; margin-top: 6px; accent-color: var(--accent); }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 24px; right: 24px;
+  background: var(--text);
+  color: var(--bg);
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 0.83rem;
+  font-weight: 500;
+  transform: translateY(70px);
+  opacity: 0;
+  transition: all 0.22s ease;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: var(--shadow-lg);
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { background: var(--accent); color: #fff; }
+.toast.error { background: var(--red); color: #fff; }
+
+/* ── FOOTER ── */
+footer {
+  text-align: center;
+  padding: 24px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+/* ── CITATION COUNT BANNER ── */
+.progress-banner {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.82rem;
+  color: var(--text-light);
+}
+.progress-bar-wrap {
+  flex: 1;
+  height: 4px;
+  background: var(--surface2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.progress-bar {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+/* ── EXPORT MENU ── */
+.export-menu { position: relative; }
+.export-dropdown {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  min-width: 160px;
+  display: none;
+  z-index: 50;
+  overflow: hidden;
+}
+.export-dropdown.open { display: block; }
+.export-opt {
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: none;
+  font-family: var(--font-body);
+  font-size: 0.84rem;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background var(--transition);
+}
+.export-opt:hover { background: var(--surface2); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 640px) {
+  header { padding: 0 16px; }
+  .source-tabs { padding: 0 16px; }
+  .layout { padding: 20px 16px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-card-body { padding: 16px; }
+  .form-actions { padding: 12px 16px; }
+  .saved-item { padding: 12px 16px; }
+  .copy-all-row { padding: 10px 16px; }
+  .settings-panel { width: 100%; }
+}
 </style>
 </head>
 <body>
+
+<!-- HEADER -->
 <header>
   <div class="logo">Cite<span>Fast</span></div>
-  <div class="badge">APA 7</div>
+  <div class="header-right">
+    <div class="badge">APA 7</div>
+    <button class="icon-btn" onclick="toggleSettings()" title="Settings" aria-label="Settings">⚙️</button>
+  </div>
 </header>
+
+<!-- SOURCE TABS (Citation Machine style) -->
+<nav class="source-tabs" id="sourceNav" role="tablist">
+  <button class="source-tab active" data-type="website" role="tab"><span class="tab-icon">🌐</span> Website</button>
+  <button class="source-tab" data-type="book" role="tab"><span class="tab-icon">📖</span> Book</button>
+  <button class="source-tab" data-type="journal" role="tab"><span class="tab-icon">📄</span> Journal</button>
+  <button class="source-tab" data-type="newspaper" role="tab"><span class="tab-icon">📰</span> Newspaper</button>
+  <button class="source-tab" data-type="youtube" role="tab"><span class="tab-icon">▶️</span> YouTube</button>
+  <button class="source-tab" data-type="podcast" role="tab"><span class="tab-icon">🎙️</span> Podcast</button>
+  <button class="source-tab" data-type="film" role="tab"><span class="tab-icon">🎬</span> Film / TV</button>
+  <button class="source-tab" data-type="government" role="tab"><span class="tab-icon">🏛️</span> Government</button>
+</nav>
+
+<!-- MAIN LAYOUT -->
 <div class="layout">
-  <aside class="left-panel">
-    <div class="panel-label">Source type</div>
-    <ul class="source-list" id="sourceNav">
-      <li><button class="active" data-type="website">🌐 Website</button></li>
-      <li><button data-type="book">📖 Book</button></li>
-      <li><button data-type="journal">📄 Journal</button></li>
-      <li><button data-type="newspaper">📰 Newspaper</button></li>
-      <li><button data-type="youtube">▶️ YouTube</button></li>
-    </ul>
-  </aside>
-  <main class="main-panel">
+
+  <!-- AUTO-FILL SEARCH -->
+  <div class="search-card">
+    <div class="search-card-label">Auto-fill from URL</div>
     <div class="search-wrap">
-      <input class="search-input" id="urlInput" type="text" placeholder="Paste a URL to auto-fill fields…"/>
-      <button class="btn btn-primary" id="searchBtn" onclick="fetchMeta()">Auto-Fill</button>
+      <input class="search-input" id="urlInput" type="text" placeholder="Paste a website URL to auto-fill fields…" autocomplete="off" spellcheck="false"/>
+      <button class="btn btn-primary" id="searchBtn" onclick="fetchMeta()">✨ Auto-Fill</button>
     </div>
     <div class="loader" id="loader"><div class="spinner"></div>Fetching page info…</div>
-    <div class="form-card">
-      <h2 id="formTitle">Website</h2>
-      <div class="form-grid" id="formGrid"></div>
-      <div class="form-actions">
-        <button class="btn btn-primary" onclick="generateCitation()">Generate Citation</button>
-        <button class="btn btn-ghost" onclick="clearForm()">Clear</button>
-      </div>
+  </div>
+
+  <!-- FORMAT SWITCHER -->
+  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+    <div style="font-size:0.78rem; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.07em;">Citation Style</div>
+    <div class="format-switcher">
+      <button class="format-btn active" data-fmt="apa7">APA 7</button>
+      <button class="format-btn" data-fmt="mla9">MLA 9</button>
+      <button class="format-btn" data-fmt="chicago">Chicago</button>
     </div>
-    <div class="result-card" id="resultCard">
-      <div class="result-label">Reference</div>
+  </div>
+
+  <!-- FORM CARD -->
+  <div class="form-card">
+    <div class="form-card-header">
+      <h2 id="formTitle">Website</h2>
+      <span id="formSubtitle" style="font-size:0.75rem;color:var(--muted);">Fill in what you know</span>
+    </div>
+    <div class="form-card-body">
+      <div class="form-grid" id="formGrid"></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="generateCitation()">Generate Citation</button>
+      <button class="btn btn-ghost" onclick="clearForm()">Clear</button>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="result-card" id="resultCard">
+    <div class="result-card-header">
+      <div class="result-label">📋 Reference</div>
+      <button class="btn btn-sm btn-primary" onclick="saveCitation()">+ Save to list</button>
+    </div>
+    <div class="result-card-body">
       <div class="citation-text" id="citationOutput"></div>
-      <div class="intext-wrap">
-        <span class="intext-label">In-text:</span>
+      <div class="intext-pill">
+        <span class="intext-label">In-text</span>
         <span class="intext-value" id="inTextOutput"></span>
       </div>
       <div class="result-actions">
-        <button class="btn btn-sm btn-ghost" onclick="copyRef()">Copy reference</button>
+        <button class="btn btn-sm btn-ghost" onclick="copyRef()">📋 Copy reference</button>
         <button class="btn btn-sm btn-ghost" onclick="copyInText()">Copy in-text</button>
-        <button class="btn btn-sm btn-primary" onclick="saveCitation()">+ Save</button>
       </div>
     </div>
-    <div class="saved-section">
-      <div class="saved-header">
-        <h3>Saved citations</h3>
+  </div>
+
+  <!-- SAVED CITATIONS -->
+  <div class="saved-section">
+    <div class="saved-header">
+      <div class="saved-header-left">
+        <h3>Saved Citations</h3>
         <span class="saved-count" id="savedCount">0</span>
       </div>
-      <div class="saved-empty" id="savedEmpty">No citations saved yet.</div>
-      <ul class="saved-list" id="savedList"></ul>
-      <div class="copy-all-row" id="copyAllRow" style="display:none">
-        <button class="btn btn-sm btn-ghost" onclick="copyAll()">Copy all</button>
+      <button class="btn btn-sm btn-danger" onclick="clearAll()" id="clearAllBtn" style="display:none">🗑 Clear all</button>
+    </div>
+    <div class="saved-empty" id="savedEmpty">
+      <div class="saved-empty-icon">📂</div>
+      Generate a citation and click <strong>Save</strong> to add it here.
+    </div>
+    <ul class="saved-list" id="savedList"></ul>
+    <div class="copy-all-row" id="copyAllRow" style="display:none">
+      <div style="font-size:0.78rem; color:var(--muted);">Sorted alphabetically by default</div>
+      <div class="export-menu">
+        <button class="btn btn-sm btn-ghost" onclick="toggleExport()">Export ▾</button>
+        <div class="export-dropdown" id="exportDropdown">
+          <button class="export-opt" onclick="copyAll()">📋 Copy all text</button>
+          <button class="export-opt" onclick="exportTxt()">📄 Download .txt</button>
+          <button class="export-opt" onclick="exportBibTeX()">🔬 Download BibTeX</button>
+        </div>
       </div>
     </div>
-  </main>
+  </div>
+
 </div>
-<footer>Made in Canada</footer>
+
+<footer>Made with ❤️ in Canada &nbsp;·&nbsp; CiteFast APA 7</footer>
+
+<!-- TOAST -->
 <div class="toast" id="toast"></div>
+
+<!-- SETTINGS PANEL -->
+<div class="settings-overlay" id="settingsOverlay" onclick="handleOverlayClick(event)">
+  <div class="settings-panel">
+    <div class="settings-header">
+      <h2>⚙️ Settings</h2>
+      <button class="icon-btn" onclick="toggleSettings()">✕</button>
+    </div>
+    <div class="settings-body">
+
+      <div class="setting-group">
+        <h4>Appearance</h4>
+        <div class="theme-options">
+          <button class="theme-option active" data-theme-opt="light" onclick="setTheme('light')">
+            <span class="theme-icon">☀️</span> Light
+          </button>
+          <button class="theme-option" data-theme-opt="dark" onclick="setTheme('dark')">
+            <span class="theme-icon">🌙</span> Dark
+          </button>
+          <button class="theme-option" data-theme-opt="system" onclick="setTheme('system')">
+            <span class="theme-icon">💻</span> System
+          </button>
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <h4>Citation Options</h4>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-name">Auto-sort saved citations</div>
+            <div class="setting-desc">Sort A–Z when saving</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="settingAutoSort" checked onchange="saveSettings()"/>
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-name">Show in-text citation</div>
+            <div class="setting-desc">Display (Author, Year) format</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="settingShowIntext" checked onchange="saveSettings(); applySettings();"/>
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-name">Hanging indent preview</div>
+            <div class="setting-desc">Show correct APA indentation</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="settingHanging" checked onchange="saveSettings(); applySettings();"/>
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-name">Number saved citations</div>
+            <div class="setting-desc">Show index numbers in list</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="settingNumbers" checked onchange="saveSettings(); renderSaved();"/>
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <h4>Text Size</h4>
+        <input type="range" class="font-slider" id="fontSizeSlider" min="14" max="20" value="16" oninput="applyFontSize(this.value)"/>
+        <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--muted);margin-top:4px;">
+          <span>Small</span><span>Large</span>
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <h4>Data</h4>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-name">Saved citations</div>
+            <div class="setting-desc" id="settingDataCount">0 citations stored</div>
+          </div>
+          <button class="btn btn-sm btn-danger" onclick="clearAll()">Clear</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <script>
+// ── SOURCE DEFINITIONS ──
 const SOURCES = {
-  website:   { title:'Website',        fields:[{id:'authors',label:'Author(s)',placeholder:'Jane Doe',span:'half'},{id:'year',label:'Year',placeholder:'2024',span:'half',type:'number'},{id:'month',label:'Month',placeholder:'March',span:'half'},{id:'day',label:'Day',placeholder:'15',span:'half',type:'number'},{id:'title',label:'Page title',placeholder:'The article title',span:'full'},{id:'siteName',label:'Website name',placeholder:'The New York Times',span:'half'},{id:'websiteUrl',label:'URL',placeholder:'https://www.example.com/...',span:'full'}] },
-  book:      { title:'Book',           fields:[{id:'authors',label:'Author(s)',placeholder:'Jane Doe',span:'half'},{id:'year',label:'Year',placeholder:'2024',span:'half',type:'number'},{id:'title',label:'Book title',placeholder:'The Great Book',span:'full'},{id:'edition',label:'Edition',placeholder:'2nd',span:'half'},{id:'publisher',label:'Publisher',placeholder:'Penguin Books',span:'half'},{id:'doi',label:'DOI (optional)',placeholder:'10.1000/xyz123',span:'full'}] },
-  journal:   { title:'Journal Article',fields:[{id:'authors',label:'Author(s)',placeholder:'Jane Doe; John Smith',span:'full'},{id:'year',label:'Year',placeholder:'2024',span:'half',type:'number'},{id:'title',label:'Article title',placeholder:'The article title',span:'full'},{id:'journal',label:'Journal name',placeholder:'Nature',span:'half'},{id:'volume',label:'Volume',placeholder:'12',span:'half',type:'number'},{id:'issue',label:'Issue',placeholder:'3',span:'half',type:'number'},{id:'pages',label:'Pages',placeholder:'45–67',span:'half'},{id:'doi',label:'DOI',placeholder:'10.1000/xyz123',span:'full'}] },
-  newspaper: { title:'Newspaper',      fields:[{id:'authors',label:'Author(s)',placeholder:'Jane Doe',span:'half'},{id:'year',label:'Year',placeholder:'2024',span:'half',type:'number'},{id:'month',label:'Month',placeholder:'March',span:'half'},{id:'day',label:'Day',placeholder:'15',span:'half',type:'number'},{id:'title',label:'Article title',placeholder:'The headline',span:'full'},{id:'journal',label:'Newspaper name',placeholder:'The Washington Post',span:'half'},{id:'websiteUrl',label:'URL (if online)',placeholder:'https://…',span:'full'}] },
-  youtube:   { title:'YouTube Video',  fields:[{id:'authors',label:'Channel / Author',placeholder:'Kurzgesagt',span:'half'},{id:'year',label:'Year',placeholder:'2024',span:'half',type:'number'},{id:'month',label:'Month',placeholder:'January',span:'half'},{id:'day',label:'Day',placeholder:'5',span:'half',type:'number'},{id:'title',label:'Video title',placeholder:'How the universe works',span:'full'},{id:'websiteUrl',label:'YouTube URL',placeholder:'https://youtu.be/…',span:'full'}] },
+  website: {
+    title: 'Website', subtitle: 'News articles, blog posts, web pages',
+    fields: [
+      {id:'authors', label:'Author(s)', placeholder:'Last, F. M.; Last, F.', span:'full'},
+      {id:'year', label:'Year', placeholder:'2024', type:'number'},
+      {id:'month', label:'Month', placeholder:'March'},
+      {id:'day', label:'Day', placeholder:'15', type:'number'},
+      {id:'title', label:'Page title', placeholder:'Article or page title', span:'full'},
+      {id:'siteName', label:'Website name', placeholder:'The New York Times'},
+      {id:'websiteUrl', label:'URL', placeholder:'https://example.com/…', span:'full'},
+    ]
+  },
+  book: {
+    title: 'Book', subtitle: 'Printed or digital books',
+    fields: [
+      {id:'authors', label:'Author(s)', placeholder:'Last, F. M.', span:'full'},
+      {id:'year', label:'Year', placeholder:'2024', type:'number'},
+      {id:'title', label:'Book title', placeholder:'The Great Book', span:'full'},
+      {id:'edition', label:'Edition', placeholder:'2nd ed.'},
+      {id:'publisher', label:'Publisher', placeholder:'Penguin Books'},
+      {id:'doi', label:'DOI (optional)', placeholder:'10.1000/xyz123', span:'full'},
+    ]
+  },
+  journal: {
+    title: 'Journal Article', subtitle: 'Peer-reviewed academic articles',
+    fields: [
+      {id:'authors', label:'Author(s)', placeholder:'Last, F. M.; Last, F.', span:'full'},
+      {id:'year', label:'Year', placeholder:'2024', type:'number'},
+      {id:'title', label:'Article title', placeholder:'The article title', span:'full'},
+      {id:'journal', label:'Journal name', placeholder:'Nature'},
+      {id:'volume', label:'Volume', placeholder:'12', type:'number'},
+      {id:'issue', label:'Issue', placeholder:'3', type:'number'},
+      {id:'pages', label:'Pages', placeholder:'45–67'},
+      {id:'doi', label:'DOI', placeholder:'10.1000/xyz123', span:'full'},
+    ]
+  },
+  newspaper: {
+    title: 'Newspaper Article', subtitle: 'Print or online newspaper',
+    fields: [
+      {id:'authors', label:'Author(s)', placeholder:'Last, F. M.'},
+      {id:'year', label:'Year', placeholder:'2024', type:'number'},
+      {id:'month', label:'Month', placeholder:'March'},
+      {id:'day', label:'Day', placeholder:'15', type:'number'},
+      {id:'title', label:'Article title', placeholder:'The headline', span:'full'},
+      {id:'journal', label:'Newspaper name', placeholder:'The Washington Post'},
+      {id:'websiteUrl', label:'URL (if online)', placeholder:'https://…', span:'full'},
+    ]
+  },
+  youtube: {
+    title: 'YouTube Video', subtitle: 'Online video content',
+    fields: [
+      {id:'authors', label:'Channel / Creator', placeholder:'Channel Name'},
+      {id:'year', label:'Year', placeholder:'2024', type:'number'},
+      {id:'month', label:'Month', placeholder:'January'},
+      {id:'day', label:'Day', placeholder:'5', type:'number'},
+      {id:'title', label:'Video title', placeholder:'How the universe works', span:'full'},
+      {id:'websiteUrl', label:'YouTube URL', placeholder:'https://youtu.be/…', span:'full'},
+    ]
+  },
+  podcast: {
+    title: 'Podcast', subtitle: 'Podcast episodes',
+    fields: [
+      {id:'authors', label:'Host / Producer', placeholder:'Last, F. M.', span:'full'},
+      {id:'year', label:'Year', placeholder:'2024', type:'number'},
+      {id:'month', label:'Month', placeholder:'June'},
+      {id:'day', label:'Day', placeholder:'10', type:'number'},
+      {id:'title', label:'Episode title', placeholder:'The episode title', span:'full'},
+      {id:'journal', label:'Podcast name', placeholder:'Serial', span:'full'},
+      {id:'websiteUrl', label:'URL', placeholder:'https://…', span:'full'},
+    ]
+  },
+  film: {
+    title: 'Film / TV', subtitle: 'Movies, documentaries, TV episodes',
+    fields: [
+      {id:'authors', label:'Director(s)', placeholder:'Nolan, C.', span:'full'},
+      {id:'year', label:'Year', placeholder:'2024', type:'number'},
+      {id:'title', label:'Title', placeholder:'Oppenheimer', span:'full'},
+      {id:'publisher', label:'Studio / Network', placeholder:'Universal Pictures'},
+      {id:'websiteUrl', label:'Streaming URL (optional)', placeholder:'https://…', span:'full'},
+    ]
+  },
+  government: {
+    title: 'Government Document', subtitle: 'Reports, legislation, public records',
+    fields: [
+      {id:'authors', label:'Agency / Author', placeholder:'Statistics Canada', span:'full'},
+      {id:'year', label:'Year', placeholder:'2024', type:'number'},
+      {id:'title', label:'Document title', placeholder:'Annual Report 2024', span:'full'},
+      {id:'publisher', label:'Publishing body', placeholder:'Government of Canada'},
+      {id:'websiteUrl', label:'URL', placeholder:'https://…', span:'full'},
+    ]
+  },
 };
 
-
+// ── STATE ──
 let currentType = 'website';
-let savedCitations = JSON.parse(localStorage.getItem('citefast_citations') || '[]');
+let currentFormat = 'apa7';
+let savedCitations = JSON.parse(localStorage.getItem('citefast_v4_citations') || '[]');
+let settings = JSON.parse(localStorage.getItem('citefast_v4_settings') || JSON.stringify({
+  theme: 'light',
+  autoSort: true,
+  showIntext: true,
+  hanging: true,
+  numbers: true,
+  fontSize: 16,
+}));
 
+// ── INIT ──
+function init() {
+  applySettings();
+  applyFontSize(settings.fontSize);
+  document.getElementById('fontSizeSlider').value = settings.fontSize;
+  document.getElementById('settingAutoSort').checked = settings.autoSort;
+  document.getElementById('settingShowIntext').checked = settings.showIntext;
+  document.getElementById('settingHanging').checked = settings.hanging;
+  document.getElementById('settingNumbers').checked = settings.numbers;
+  setTheme(settings.theme, false);
+  renderForm('website');
+  renderSaved();
+}
+
+// ── THEME ──
+function setTheme(theme, save=true) {
+  settings.theme = theme;
+  const pref = theme === 'system'
+    ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+    : theme;
+  document.documentElement.setAttribute('data-theme', pref);
+  document.querySelectorAll('[data-theme-opt]').forEach(b => {
+    b.classList.toggle('active', b.dataset.themeOpt === theme);
+  });
+  if (save) saveSettings();
+}
+
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  if (settings.theme === 'system') setTheme('system', false);
+});
+
+// ── SETTINGS ──
+function saveSettings() {
+  settings.autoSort = document.getElementById('settingAutoSort').checked;
+  settings.showIntext = document.getElementById('settingShowIntext').checked;
+  settings.hanging = document.getElementById('settingHanging').checked;
+  settings.numbers = document.getElementById('settingNumbers').checked;
+  localStorage.setItem('citefast_v4_settings', JSON.stringify(settings));
+}
+
+function applySettings() {
+  const intextPill = document.querySelector('.intext-pill');
+  if (intextPill) intextPill.style.display = settings.showIntext !== false ? '' : 'none';
+  const citations = document.querySelectorAll('.citation-text, .saved-item-text');
+  citations.forEach(el => {
+    el.style.paddingLeft = settings.hanging !== false ? '2em' : '0';
+    el.style.textIndent = settings.hanging !== false ? '-2em' : '0';
+  });
+  document.getElementById('settingDataCount').textContent = `${savedCitations.length} citation${savedCitations.length !== 1 ? 's' : ''} stored`;
+}
+
+function applyFontSize(size) {
+  settings.fontSize = parseInt(size);
+  document.querySelector('.citation-text') && (document.querySelector('.citation-text').style.fontSize = size + 'px');
+  localStorage.setItem('citefast_v4_settings', JSON.stringify(settings));
+}
+
+function toggleSettings() {
+  const overlay = document.getElementById('settingsOverlay');
+  overlay.classList.toggle('open');
+  document.getElementById('settingDataCount').textContent = `${savedCitations.length} citation${savedCitations.length !== 1 ? 's' : ''} stored`;
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('settingsOverlay')) toggleSettings();
+}
+
+// ── FORMAT SWITCHER ──
+document.querySelectorAll('.format-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.format-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFormat = btn.dataset.fmt;
+    if (currentFormat !== 'apa7') toast(`${btn.textContent} coming soon — generating APA 7 for now`, false);
+  });
+});
+
+// ── SOURCE TABS ──
+document.getElementById('sourceNav').addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  document.querySelectorAll('.source-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderForm(btn.dataset.type);
+});
+
+// ── RENDER FORM ──
 function renderForm(type) {
   currentType = type;
   const def = SOURCES[type];
   document.getElementById('formTitle').textContent = def.title;
+  document.getElementById('formSubtitle').textContent = def.subtitle;
   const grid = document.getElementById('formGrid');
   grid.innerHTML = '';
   def.fields.forEach(f => {
@@ -163,29 +1113,24 @@ function renderForm(type) {
     const inp = document.createElement('input');
     inp.type = f.type || 'text';
     inp.id = 'field_' + f.id;
-    // Use current date values for date fields
-    if (f.id === 'year') {
-      inp.placeholder = new Date().getFullYear().toString();
-    } else if (f.id === 'month') {
-      inp.placeholder = new Date().toLocaleString('en-US', { month: 'long' });
-    } else if (f.id === 'day') {
-      inp.placeholder = new Date().getDate().toString();
-    } else {
-      inp.placeholder = f.placeholder;
+    if (f.id === 'year') inp.placeholder = new Date().getFullYear();
+    else if (f.id === 'month') inp.placeholder = new Date().toLocaleString('en-US', {month:'long'});
+    else if (f.id === 'day') inp.placeholder = new Date().getDate();
+    else inp.placeholder = f.placeholder;
+    div.appendChild(lbl);
+    div.appendChild(inp);
+    if (f.id === 'authors') {
+      const hint = document.createElement('div');
+      hint.className = 'authors-hint';
+      hint.textContent = 'Format: Last, F. M. — separate multiple authors with semicolons';
+      div.appendChild(hint);
     }
-    div.appendChild(lbl); div.appendChild(inp); grid.appendChild(div);
+    grid.appendChild(div);
   });
   document.getElementById('resultCard').style.display = 'none';
 }
 
-document.getElementById('sourceNav').addEventListener('click', e => {
-  const btn = e.target.closest('button');
-  if (!btn) return;
-  document.querySelectorAll('#sourceNav button').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderForm(btn.dataset.type);
-});
-
+// ── GET FORM DATA ──
 function getFormData() {
   const data = { sourceType: currentType };
   SOURCES[currentType].fields.forEach(f => {
@@ -195,14 +1140,24 @@ function getFormData() {
   return data;
 }
 
+// ── FILL FIELDS ──
 function fillFields(meta) {
-  const map = { title:meta.title, authors:meta.author, year:meta.year, month:meta.month, day:meta.day, siteName:meta.siteName, websiteUrl:meta.url };
+  const map = {
+    title: meta.title, authors: meta.author,
+    year: meta.year, month: meta.month, day: meta.day,
+    siteName: meta.siteName, websiteUrl: meta.url,
+  };
   Object.entries(map).forEach(([key, val]) => {
     const el = document.getElementById('field_' + key);
-    if (el && val) { el.value = val; el.classList.add('auto-filled'); setTimeout(() => el.classList.remove('auto-filled'), 2500); }
+    if (el && val) {
+      el.value = val;
+      el.classList.add('auto-filled');
+      setTimeout(() => el.classList.remove('auto-filled'), 2500);
+    }
   });
 }
 
+// ── FETCH META ──
 async function fetchMeta() {
   const rawUrl = document.getElementById('urlInput').value.trim();
   if (!rawUrl) { toast('Paste a URL first', false); return; }
@@ -210,71 +1165,204 @@ async function fetchMeta() {
   const btn = document.getElementById('searchBtn');
   loader.style.display = 'flex'; btn.disabled = true;
   try {
-    const res = await fetch('/api/fetch-meta', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({url:rawUrl}) });
+    const res = await fetch('/api/fetch-meta', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({url: rawUrl}),
+    });
     const data = await res.json();
-    if (data.ok) { fillFields(data.meta); toast('Fields auto-filled', true); }
-    else toast(data.error || 'Could not fetch — fill manually', false);
+    if (data.ok) { fillFields(data.meta); toast('Fields auto-filled ✓', true); }
+    else toast(data.error || 'Could not fetch — fill in manually', false);
   } catch { toast('Could not reach server', false); }
   finally { loader.style.display = 'none'; btn.disabled = false; }
 }
 
+// ── GENERATE CITATION ──
 async function generateCitation() {
   const data = getFormData();
   if (!data.title) { toast('Title is required', false); return; }
   try {
-    const res = await fetch('/api/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data),
+    });
     const result = await res.json();
-    document.getElementById('citationOutput').innerHTML = result.reference;
-    document.getElementById('inTextOutput').innerHTML = result.inText;
+    const citEl = document.getElementById('citationOutput');
+    const intextEl = document.getElementById('inTextOutput');
+    citEl.innerHTML = result.reference;
+    intextEl.innerHTML = result.inText;
+    citEl.style.paddingLeft = settings.hanging !== false ? '2em' : '0';
+    citEl.style.textIndent = settings.hanging !== false ? '-2em' : '0';
     const card = document.getElementById('resultCard');
     card.style.display = 'block';
-    card.scrollIntoView({ behavior:'smooth', block:'nearest' });
-  } catch { toast('Server error', false); }
+    document.querySelector('.intext-pill').style.display = settings.showIntext !== false ? '' : 'none';
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } catch { toast('Server error — is the API running?', false); }
 }
 
+// ── SAVE / CLEAR ──
 function saveCitation() {
   const refText = document.getElementById('citationOutput').innerHTML;
   if (!refText) return;
+  if (savedCitations.includes(refText)) { toast('Already saved', false); return; }
   savedCitations.push(refText);
-  localStorage.setItem('citefast_citations', JSON.stringify(savedCitations));
-  renderSaved(); toast('Saved', true);
+  if (settings.autoSort !== false) {
+    savedCitations.sort((a, b) => {
+      const t = el => { const d = document.createElement('div'); d.innerHTML = el; return d.innerText; };
+      return t(a).localeCompare(t(b));
+    });
+  }
+  localStorage.setItem('citefast_v4_citations', JSON.stringify(savedCitations));
+  renderSaved();
+  toast('Saved to list ✓', true);
 }
 
+function clearAll() {
+  if (!savedCitations.length) return;
+  if (!confirm(`Delete all ${savedCitations.length} saved citation${savedCitations.length !== 1 ? 's' : ''}?`)) return;
+  savedCitations = [];
+  localStorage.setItem('citefast_v4_citations', JSON.stringify(savedCitations));
+  renderSaved();
+  toast('All citations cleared', false);
+}
+
+// ── RENDER SAVED ──
 function renderSaved() {
   const list = document.getElementById('savedList');
   const empty = document.getElementById('savedEmpty');
   const count = document.getElementById('savedCount');
   const copyRow = document.getElementById('copyAllRow');
+  const clearBtn = document.getElementById('clearAllBtn');
   count.textContent = savedCitations.length;
-  if (!savedCitations.length) { empty.style.display='block'; list.innerHTML=''; copyRow.style.display='none'; return; }
-  empty.style.display='none'; copyRow.style.display='flex'; list.innerHTML='';
+  applySettings();
+  if (!savedCitations.length) {
+    empty.style.display = 'block'; list.innerHTML = '';
+    copyRow.style.display = 'none'; clearBtn.style.display = 'none'; return;
+  }
+  empty.style.display = 'none'; copyRow.style.display = 'flex'; clearBtn.style.display = '';
+  list.innerHTML = '';
   savedCitations.forEach((c, i) => {
-    const li = document.createElement('li'); li.className='saved-item';
-    const p = document.createElement('p'); p.className='saved-item-text'; p.innerHTML=c;
-    const del = document.createElement('button'); del.className='saved-item-del'; del.textContent='✕';
-    del.onclick = () => { savedCitations.splice(i,1); localStorage.setItem('citefast_citations',JSON.stringify(savedCitations)); renderSaved(); };
-    li.appendChild(p); li.appendChild(del); list.appendChild(li);
+    const li = document.createElement('li');
+    li.className = 'saved-item';
+
+    const num = document.createElement('span');
+    num.className = 'saved-item-num';
+    num.textContent = settings.numbers !== false ? `${i + 1}.` : '';
+
+    const p = document.createElement('p');
+    p.className = 'saved-item-text';
+    p.innerHTML = c;
+    p.style.paddingLeft = settings.hanging !== false ? '1.5em' : '0';
+    p.style.textIndent = settings.hanging !== false ? '-1.5em' : '0';
+
+    const actions = document.createElement('div');
+    actions.className = 'saved-item-actions';
+
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'saved-item-btn';
+    copyBtn.title = 'Copy';
+    copyBtn.textContent = '📋';
+    copyBtn.onclick = () => {
+      const t = document.createElement('div'); t.innerHTML = c;
+      navigator.clipboard.writeText(t.innerText).then(() => toast('Copied', true));
+    };
+
+    const del = document.createElement('button');
+    del.className = 'saved-item-btn saved-item-del';
+    del.textContent = '✕';
+    del.title = 'Remove';
+    del.onclick = () => {
+      savedCitations.splice(i, 1);
+      localStorage.setItem('citefast_v4_citations', JSON.stringify(savedCitations));
+      renderSaved();
+    };
+
+    actions.appendChild(copyBtn);
+    actions.appendChild(del);
+    li.appendChild(num);
+    li.appendChild(p);
+    li.appendChild(actions);
+    list.appendChild(li);
   });
 }
 
-function copyRef() { navigator.clipboard.writeText(document.getElementById('citationOutput').innerText).then(() => toast('Copied',true)); }
-function copyInText() { navigator.clipboard.writeText(document.getElementById('inTextOutput').innerText).then(() => toast('Copied',true)); }
+// ── COPY FUNCTIONS ──
+function copyRef() {
+  navigator.clipboard.writeText(document.getElementById('citationOutput').innerText)
+    .then(() => toast('Reference copied ✓', true));
+}
+function copyInText() {
+  navigator.clipboard.writeText(document.getElementById('inTextOutput').innerText)
+    .then(() => toast('In-text citation copied ✓', true));
+}
 function copyAll() {
-  const all = savedCitations.map(c => { const t=document.createElement('div'); t.innerHTML=c; return t.innerText; }).join('\n\n');
-  navigator.clipboard.writeText(all).then(() => toast(`${savedCitations.length} citations copied`,true));
+  const all = savedCitations.map(c => {
+    const t = document.createElement('div'); t.innerHTML = c; return t.innerText;
+  }).join('\n\n');
+  navigator.clipboard.writeText(all).then(() => toast(`${savedCitations.length} citations copied ✓`, true));
+  closeExport();
 }
+
+// ── EXPORT ──
+function toggleExport() {
+  document.getElementById('exportDropdown').classList.toggle('open');
+}
+function closeExport() {
+  document.getElementById('exportDropdown').classList.remove('open');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.export-menu')) closeExport();
+});
+
+function exportTxt() {
+  const all = savedCitations.map((c, i) => {
+    const t = document.createElement('div'); t.innerHTML = c; return `${i+1}. ${t.innerText}`;
+  }).join('\n\n');
+  download('citations.txt', all);
+  closeExport();
+}
+
+function exportBibTeX() {
+  const bibtex = savedCitations.map((c, i) => {
+    const t = document.createElement('div'); t.innerHTML = c;
+    return `@misc{cite${i+1},\n  note={${t.innerText}}\n}`;
+  }).join('\n\n');
+  download('citations.bib', bibtex);
+  closeExport();
+}
+
+function download(filename, content) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content], {type:'text/plain'}));
+  a.download = filename;
+  a.click();
+  toast(`Downloaded ${filename}`, true);
+}
+
+// ── CLEAR FORM ──
 function clearForm() {
-  document.querySelectorAll('#formGrid input').forEach(el => el.value='');
-  document.getElementById('urlInput').value='';
-  document.getElementById('resultCard').style.display='none';
+  document.querySelectorAll('#formGrid input').forEach(el => el.value = '');
+  document.getElementById('urlInput').value = '';
+  document.getElementById('resultCard').style.display = 'none';
 }
-function toast(msg, success=true) {
-  const el=document.getElementById('toast');
-  el.textContent=msg; el.className='toast show'+(success?' green':'');
-  setTimeout(() => el.className='toast', 2200);
+
+// ── TOAST ──
+function toast(msg, success = true) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + (success ? 'success' : 'error');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.className = 'toast', 2400);
 }
-document.getElementById('urlInput').addEventListener('keydown', e => { if(e.key==='Enter') fetchMeta(); });
-renderForm('website'); renderSaved();
+
+// ── KEYBOARD SHORTCUT ──
+document.getElementById('urlInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') fetchMeta();
+});
+
+// ── START ──
+init();
 </script>
 </body>
 </html>
